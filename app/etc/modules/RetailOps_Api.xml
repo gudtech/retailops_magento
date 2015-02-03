@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!--
+{license_text}
+-->
+<config>
+    <modules>
+        <RetailOps_Api>
+            <active>true</active>
+            <codePool>community</codePool>
+            <depends/>
+        </RetailOps_Api>
+    </modules>
+</config>

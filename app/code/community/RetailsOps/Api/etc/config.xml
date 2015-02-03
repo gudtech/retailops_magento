@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<!--
+{license_text}
+-->
+<config>
+    <modules>
+        <RetailOps_Api>
+            <version>1.0.0</version>
+        </RetailOps_Api>
+    </modules>
+    <global>
+        <helpers>
+            <retailops_api>
+                <class>RetailOps_Api_Helper</class>
+            </retailops_api>
+        </helpers>
+        <models>
+            <retailops_api>
+                <class>RetailOps_Api_Model</class>
+                <resourceModel>retailops_api_resource</resourceModel>
+            </retailops_api>
+            <retailops_api_resource>
+                <class>RetailOps_Api_Model_Resource</class>
+                <entities>
+                </entities>
+            </retailops_api_resource>
+        </models>
+        <blocks>
+            <retailops_api>
+                <class>RetailOps_Api_Block</class>
+            </retailops_api>
+        </blocks>
+        <resources>
+            <retailops_api_setup>
+                <setup>
+                    <module>RetailOps_Api</module>
+                    <class>Mage_Core_Model_Resource_Setup</class>
+                </setup>
+            </retailops_api_setup>
+        </resources>
+    </global>
+    <adminhtml>
+    </adminhtml>
+    <frontend>
+    </frontend>
+</config>
