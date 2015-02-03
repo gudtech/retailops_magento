@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<!--
+{license_text}
+-->
+<config>
+    <api>
+        <resources>
+            <retailops translate="title" module="retailops_api">
+                <title>RetailOps API</title>
+                <model>retailops_api/api</model>
+                <acl>retailops</acl><!-- acl resource alias -->
+                <methods><!-- definne the methods -->
+                    <catalog_pull translate="title" module="retailops_api"><!-- list projects -->
+                        <title>Retrieve list of products</title>
+                        <method>catalogPull</method>
+                        <acl>retailops/catalog_pull</acl>
+                    </catalog_pull>
+                </methods>
+                <faults module="retailops_api"><!-- errors that might appear-->
+                </faults>
+            </retailops>
+        </resources>
+        <acl><!-- acl definition -->
+            <resources>
+                <retailops translate="title" module="retailops_api">
+                    <title>Retailops</title>
+                    <sort_order>120</sort_order>
+                    <catalog_pull translate="title" module="retailops_api">
+                        <title>Catalog Pull</title>
+                    </catalog_pull>
+                    <catalog_push translate="title" module="retailops_api">
+                        <title>Catalog Push</title>
+                    </catalog_push>
+                    <inventory_push translate="title" module="retailops_api">
+                        <title>Inventory Push</title>
+                    </inventory_push>
+                    <order_pull translate="title" module="retailops_api">
+                        <title>Order Pull</title>
+                    </order_pull>
+                    <order_update translate="title" module="retailops_api">
+                        <title>Order Update</title>
+                    </order_update>
+                    <shipment_push translate="title" module="retailops_api">
+                        <title>Shipment Push</title>
+                    </shipment_push>
+                </retailops>
+            </resources>
+        </acl>
+    </api>
+</config>
