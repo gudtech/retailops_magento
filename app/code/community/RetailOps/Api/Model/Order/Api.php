@@ -30,9 +30,32 @@ class RetailOps_Api_Model_Order_Api extends Mage_Sales_Model_Order_Api
     public function orderPull($filters = null)
     {
         $orders = array();
+        //TODO: add full name logic
+        $billingAliasName = 'billing_o_a';
+        $shippingAliasName = 'shipping_o_a';
 
         /** @var $orderCollection Mage_Sales_Model_Mysql4_Order_Collection */
         $orderCollection = Mage::getModel("sales/order")->getCollection();
+        $billingFirstnameField = "$billingAliasName.firstname";
+        $billingLastnameField = "$billingAliasName.lastname";
+        $shippingFirstnameField = "$shippingAliasName.firstname";
+        $shippingLastnameField = "$shippingAliasName.lastname";
+        $orderCollection->addAttributeToSelect('*')
+            ->addAddressFields()
+            ->addExpressionFieldToSelect('billing_firstname', "{{billing_firstname}}",
+                array('billing_firstname' => $billingFirstnameField))
+            ->addExpressionFieldToSelect('billing_lastname', "{{billing_lastname}}",
+                array('billing_lastname' => $billingLastnameField))
+            ->addExpressionFieldToSelect('shipping_firstname', "{{shipping_firstname}}",
+                array('shipping_firstname' => $shippingFirstnameField))
+            ->addExpressionFieldToSelect('shipping_lastname', "{{shipping_lastname}}",
+                array('shipping_lastname' => $shippingLastnameField))
+            ->addExpressionFieldToSelect('billing_name', "CONCAT({{billing_firstname}}, ' ', {{billing_lastname}})",
+                array('billing_firstname' => $billingFirstnameField, 'billing_lastname' => $billingLastnameField))
+            ->addExpressionFieldToSelect('shipping_name', 'CONCAT({{shipping_firstname}}, " ", {{shipping_lastname}})',
+                array('shipping_firstname' => $shippingFirstnameField, 'shipping_lastname' => $shippingLastnameField)
+            );
+
         $start = 0;
         $limit = 0;
 
@@ -61,7 +84,7 @@ class RetailOps_Api_Model_Order_Api extends Mage_Sales_Model_Order_Api
             $this->_fault('filters_invalid', $e->getMessage());
         }
         foreach ($orderCollection as $order) {
-            $orders[] = $this->info($order->getIncrementId());
+            $orders[] = $this->orderInfo($order);
         }
         return $orders;
     }
@@ -69,20 +92,21 @@ class RetailOps_Api_Model_Order_Api extends Mage_Sales_Model_Order_Api
     /**
     * Retrieve full order information
     *
-    * @param string $orderIncrementId
+    * @param Mage_Core_Model_Abstract $order
     * @return array
     */
-    public function info($orderIncrementId)
+    public function orderInfo($order)
     {
-        $order = $this->_initOrder($orderIncrementId);
-
         if ($order->getGiftMessageId() > 0) {
             $order->setGiftMessage(
                 Mage::getSingleton('giftmessage/message')->load($order->getGiftMessageId())->getMessage()
             );
+        } else {
+            $order->setGiftMessage(null);
         }
 
         $result['order_info'] = $this->_getAttributes($order, 'order');
+        $result['order_info']['status'] = $order->getRetailopsStatus();
 
         $result['shipping_address'] = $this->_getAttributes($order->getShippingAddress(), 'order_address');
         $result['billing_address']  = $this->_getAttributes($order->getBillingAddress(), 'order_address');
