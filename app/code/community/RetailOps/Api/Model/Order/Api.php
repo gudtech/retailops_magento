@@ -106,7 +106,6 @@ class RetailOps_Api_Model_Order_Api extends Mage_Sales_Model_Order_Api
         }
 
         $result['order_info'] = $this->_getAttributes($order, 'order');
-        $result['order_info']['status'] = $order->getRetailopsStatus();
 
         $result['shipping_address'] = $this->_getAttributes($order->getShippingAddress(), 'order_address');
         $result['billing_address']  = $this->_getAttributes($order->getBillingAddress(), 'order_address');
