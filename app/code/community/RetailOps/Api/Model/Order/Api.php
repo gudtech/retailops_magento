@@ -13,8 +13,7 @@ class RetailOps_Api_Model_Order_Api extends Mage_Sales_Model_Order_Api
         $this->_attributesMap = array(
             'order' => array(
                 'order_id' => 'entity_id',
-                'order_increment_id' => 'increment_id',
-                'status' => 'retailops_status'
+                'order_increment_id' => 'increment_id'
             ),
             'order_address' => array('address_id' => 'entity_id'),
             'order_payment' => array('payment_id' => 'entity_id')
@@ -127,6 +126,13 @@ class RetailOps_Api_Model_Order_Api extends Mage_Sales_Model_Order_Api
 
         foreach ($order->getAllStatusHistory() as $history) {
             $result['status_history'][] = $this->_getAttributes($history, 'order_status_history');
+        }
+
+        $retailops_status_history = Mage::helper('retailops_api')->getRetailOpsStatusHistory($order);
+        $result['retailops_status_history'] = array();
+
+        foreach ($retailops_status_history  as $history) {
+            $result['retailops_status_history'][] = $this->_getAttributes($history, 'retailops_order_status_history');
         }
 
         return $result;

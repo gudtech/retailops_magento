@@ -1,0 +1,39 @@
+<div class="entry-edit" id="retops-info">
+    <div class="entry-edit-head">
+        <h4><?php echo $this->__('RetailOps'); ?></h4>
+    </div>
+    <div class="fieldset fieldset-wide">
+        <div id="status_form" class="order-history-form">
+            <span class="field-row">
+                <label class="normal" for="history_status"><?php echo Mage::helper('sales')->__('Status') ?></label><br/>
+                <select name="retops[status]" class="select" id="retops_status">
+                    <?php foreach ($this->getStatuses() as $_code=>$_label): ?>
+                        <option value="<?php echo $_code ?>"<?php if($_code==$this->getOrder()->getRetailopsStatus()): ?> selected="selected"<?php endif; ?>><?php echo $_label ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </span>
+            <span class="field-row">
+                <label class="normal" for="status_comment"><?php echo Mage::helper('sales')->__('Comment') ?></label>
+                <textarea name="retops[comment]" rows="3" cols="5" style="height:6em; width:99%;" id="retops_comment">
+                    <?php echo $this->getOrder()->getRetailopsStatusComment() ?>
+                </textarea>
+            </span>
+            <div class="f-right">
+                <?php echo $this->getChildHtml('submit_button') ?>
+            </div>
+            <div class="clear"></div>
+        </div>
+    </div>
+    <div class="divider"></div>
+    <ul class="note-list">
+        <?php foreach ($this->getRetailOpsStatusHistory() as $_item): ?>
+            <li>
+                <strong><?php echo $this->helper('core')->formatDate($_item->getCreatedAtDate(), 'medium') ?></strong>
+                <?php echo $this->helper('core')->formatTime($_item->getCreatedAtDate(), 'medium') ?><span class="separator">|</span><strong><?php echo $_item->getStatus() ?></strong>
+                <?php if ($_item->getComment()): ?>
+                    <br/><?php echo $this->escapeHtml($_item->getComment(), array('b', 'br', 'strong', 'i', 'u', 'a')) ?>
+                <?php endif; ?>
+            </li>
+        <?php endforeach; ?>
+    </ul>
+</div>

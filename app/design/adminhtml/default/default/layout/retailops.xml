@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<layout>
+    <adminhtml_sales_order_view>
+        <reference name="sales_order_tabs">
+            <action method="addTab"><name>retailops_info</name><block>retailops_api/adminhtml_sales_order_view_tab_retailops</block></action>
+        </reference>
+    </adminhtml_sales_order_view>
+
+    <adminhtml_sales_order_saveretailopsinfo>
+        <block type="retailops_api/adminhtml_sales_order_view_tab_retailops"
+               name="retailops_info"
+               template="retailops/order/view/tab/retailops.phtml"
+               output="toHtml"
+        />
+    </adminhtml_sales_order_saveretailopsinfo>
+</layout>

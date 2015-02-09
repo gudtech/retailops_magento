@@ -22,6 +22,9 @@
             <retailops_api_resource>
                 <class>RetailOps_Api_Model_Resource</class>
                 <entities>
+                    <order_status_history>
+                        <table>retailops_order_status_history</table>
+                    </order_status_history>
                 </entities>
             </retailops_api_resource>
         </models>
@@ -39,7 +42,25 @@
             </retailops_api_setup>
         </resources>
     </global>
+    <admin>
+        <routers>
+            <adminhtml>
+                <args>
+                    <modules>
+                        <RetailOps_Api after="Mage_Adminhtml">RetailOps_Api_Adminhtml</RetailOps_Api>
+                    </modules>
+                </args>
+            </adminhtml>
+        </routers>
+    </admin>
     <adminhtml>
+        <layout>
+            <updates>
+                <retailops_api>
+                    <file>retailops.xml</file>
+                </retailops_api>
+            </updates>
+        </layout>
     </adminhtml>
     <frontend>
     </frontend>
