@@ -14,4 +14,14 @@ class RetailOps_Api_Model_Api extends Mage_Api_Model_Resource_Abstract
     public function catalogPull($filters = null){
        return Mage::getModel('retailops_api/catalog_api')->catalogPull($filters);
     }
+
+    /**
+     * creates Credit Memo
+     *
+     * @param mixed $returns
+     * @return array
+     */
+    public function returnPush($returns = null){
+        return Mage::getModel('retailops_api/return_api')->returnPush($returns);
+    }
 }
