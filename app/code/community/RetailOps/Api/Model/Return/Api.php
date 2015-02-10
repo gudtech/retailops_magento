@@ -50,7 +50,7 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
             $creditmemoData = $this->_prepareCreateData($creditmemoData);
 
             /** @var $creditmemo Mage_Sales_Model_Order_Creditmemo */
-            $creditmemo = $this->prepareCreditmemo($creditmemoData);
+            $creditmemo = $this->prepareCreditmemo($creditmemoData, $order);
 
             // refund to Store Credit
             if ($refundToStoreCreditAmount) {
@@ -139,6 +139,33 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
 
         $creditmemo->collectTotals();
         return $creditmemo;
+    }
+
+    /***
+    * Hook method, could be replaced in derived classes
+    *
+    * @param  array $data
+    * @return array
+    */
+    protected function _prepareCreateData($data)
+    {
+        $data = isset($data) ? $data : array();
+
+        if (isset($data['qtys']) && count($data['qtys'])) {
+            $qtysArray = array();
+            foreach ($data['qtys'] as $qKey => $qVal) {
+                // Save backward compatibility
+                if (is_array($qVal)) {
+                    if (isset($qVal['sku']) && isset($qVal['qty'])) {
+                        $qtysArray[$qVal['sku']] = $qVal['qty'];
+                    }
+                } else {
+                    $qtysArray[$qKey] = $qVal;
+                }
+            }
+            $data['qtys'] = $qtysArray;
+        }
+        return $data;
     }
 
 }
