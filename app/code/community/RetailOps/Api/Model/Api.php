@@ -16,7 +16,7 @@ class RetailOps_Api_Model_Api extends Mage_Api_Model_Resource_Abstract
     }
 
     /**
-     * Get Products
+     * Product Inventory Update
      *
      * @param array $productData
      * @return array
