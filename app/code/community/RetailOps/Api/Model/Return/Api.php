@@ -13,12 +13,23 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
      */
     public function returnPush($returns = null)
     {
+        Mage::dispatchEvent(
+            'retailops_returns_push_before',
+            array('returns_data' => $returns)
+        );
+
         $result = array();
         foreach ($returns as $return) {
             $result[] = $this->create($return['order_increment_id'], $return['credit_memo_data'] = null,
                 $return['comment'] = null, $return['notify_customer'] = false, $return['include_comment'] = false,
                 $return['refund_to_store_credit_amount'] = null);
         }
+
+        Mage::dispatchEvent(
+            'retailops_returns_push_after',
+            array('returns_data_pushed' => $returns, 'result' => $result )
+        );
+
         return $result;
     }
 
