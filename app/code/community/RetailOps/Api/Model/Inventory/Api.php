@@ -48,9 +48,15 @@ class RetailOps_Api_Model_Inventory_Api extends Mage_CatalogInventory_Model_Stoc
      */
     public function inventoryPush($productData)
     {
+        Mage::dispatchEvent(
+            'retailops_inventory_push_before',
+            array('product_data' => $productData)
+        );
+
         $response = array();
         $productData = (array)$productData;
         $orderItems = Mage::helper('retailops_api')->getRetailopsReadyOrderItems();
+
         foreach ($productData as $data) {
             try {
                 $result = array();
@@ -72,6 +78,12 @@ class RetailOps_Api_Model_Inventory_Api extends Mage_CatalogInventory_Model_Stoc
             }
             $response[] = $result;
         }
+
+        Mage::dispatchEvent(
+            'retailops_inventory_push_after',
+            array('product_data' => $productData, 'response' => $response)
+        );
+
         return $response ;
     }
 }
