@@ -28,6 +28,11 @@ class RetailOps_Api_Model_Order_Api extends Mage_Sales_Model_Order_Api
      */
     public function orderPull($filters = null)
     {
+        Mage::dispatchEvent(
+            'retailops_order_pull_before',
+            array('filters' => $filters)
+        );
+
         $orders = array();
         //TODO: add full name logic
         $billingAliasName = 'billing_o_a';
@@ -85,6 +90,12 @@ class RetailOps_Api_Model_Order_Api extends Mage_Sales_Model_Order_Api
         foreach ($orderCollection as $order) {
             $orders[] = $this->orderInfo($order);
         }
+
+        Mage::dispatchEvent(
+            'retailops_order_pull_after',
+            array('filters' => $filters, 'result' => $orders)
+        );
+
         return $orders;
     }
 

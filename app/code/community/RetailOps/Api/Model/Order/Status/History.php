@@ -67,7 +67,6 @@ class RetailOps_Api_Model_Order_Status_History extends Mage_Core_Model_Abstract
      */
     protected function _beforeSave()
     {
-        Mage::log('dfgd');
         parent::_beforeSave();
         if (!$this->getParentId() && $this->getOrder()) {
             $this->setParentId($this->getOrder()->getId());
