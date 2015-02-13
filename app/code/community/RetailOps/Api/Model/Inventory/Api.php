@@ -5,6 +5,9 @@
 
 class RetailOps_Api_Model_Inventory_Api extends Mage_CatalogInventory_Model_Stock_Item_Api
 {
+
+    const RETAILOPS_ORDER_STATUS_READY = 'retailops_ready';
+
     /**
      * Update product stock data
      *
@@ -48,27 +51,31 @@ class RetailOps_Api_Model_Inventory_Api extends Mage_CatalogInventory_Model_Stoc
      */
     public function inventoryPush($productData)
     {
+        $helper = Mage::helper('retailops_api');
+        $productCollection = $helper->getVarienDataCollection($productData);
+
         Mage::dispatchEvent(
             'retailops_inventory_push_before',
-            array('product_data' => $productData)
+            array('products' => $productCollection)
         );
 
         $response = array();
-        $productData = (array)$productData;
-        $orderItems = Mage::helper('retailops_api')->getRetailopsReadyOrderItems();
+        $orderItems = $this->getRetailopsReadyOrderItems();
 
-        foreach ($productData as $data) {
+        foreach ($productCollection as $product) {
+            $result = array();
+            $result['sku'] = $product->getSku();
             try {
-                $result = array();
-                $data['qty'] = $data['quantity'];
-                $result['sku'] = $data['sku'];
+                $product->setQty($product->getQuantity());
+                $qty = $product->getQty();
                 foreach ($orderItems as $item) {
-                    if ($data['sku'] === $item->getSku()) {
-                        $data['qty'] -= $item->getQtyOrdered();
+                    if ($product->getSku() === $item->getSku()) {
+                        $qty -= $item->getQtyOrdered();
                     }
                 }
-                $this->update($data['sku'], $data);
-                $result[]['status'] = 'success';
+                $product->setQty($qty);
+                $this->update($product->getSku(), $product->getData());
+                $result['status'] = 'success';
             } catch (Mage_Core_Exception $e) {
                 $result['status'] = 'failed';
                 $result['error'] = array(
@@ -81,9 +88,29 @@ class RetailOps_Api_Model_Inventory_Api extends Mage_CatalogInventory_Model_Stoc
 
         Mage::dispatchEvent(
             'retailops_inventory_push_after',
-            array('product_data' => $productData, 'response' => $response)
+            array('products' => $productCollection, 'responses' => $helper->getVarienDataCollection($response))
         );
 
-        return $response ;
+        return $response;
     }
+
+    /**
+     * Gets Order Items For Orders with retailops_ready status
+     *
+     * @return array
+     */
+    public function getRetailopsReadyOrderItems()
+    {
+        $items = array();
+        $orderCollection = Mage::getModel('sales/order')->getCollection()
+            ->addFieldToFilter('retailops_status', self::RETAILOPS_ORDER_STATUS_READY);
+        foreach ($orderCollection as $order) {
+            foreach ($order->getAllItems() as $item) {
+                $items[] = $item;
+            }
+        }
+
+        return $items;
+    }
+
 }
