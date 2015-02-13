@@ -28,11 +28,6 @@ class RetailOps_Api_Model_Order_Api extends Mage_Sales_Model_Order_Api
      */
     public function orderPull($filters = null)
     {
-        Mage::dispatchEvent(
-            'retailops_order_pull_before',
-            array('filters' => $filters)
-        );
-
         $orders = array();
         //TODO: add full name logic
         $billingAliasName = 'billing_o_a';
@@ -59,6 +54,11 @@ class RetailOps_Api_Model_Order_Api extends Mage_Sales_Model_Order_Api
             ->addExpressionFieldToSelect('shipping_name', 'CONCAT({{shipping_firstname}}, " ", {{shipping_lastname}})',
                 array('shipping_firstname' => $shippingFirstnameField, 'shipping_lastname' => $shippingLastnameField)
             );
+
+        Mage::dispatchEvent(
+            'retailops_order_pull_before',
+            array('orders' => $orderCollection)
+        );
 
         $start = 0;
         $limit = 0;
@@ -93,7 +93,7 @@ class RetailOps_Api_Model_Order_Api extends Mage_Sales_Model_Order_Api
 
         Mage::dispatchEvent(
             'retailops_order_pull_after',
-            array('filters' => $filters, 'result' => $orders)
+            array('results' => $orders)
         );
 
         return $orders;
@@ -139,7 +139,7 @@ class RetailOps_Api_Model_Order_Api extends Mage_Sales_Model_Order_Api
             $result['status_history'][] = $this->_getAttributes($history, 'order_status_history');
         }
 
-        $retailops_status_history = Mage::helper('retailops_api')->getRetailOpsStatusHistory($order);
+        $retailops_status_history = Mage::getModel('retailops_api/order_status_history')->getRetailOpsStatusHistory($order);
         $result['retailops_status_history'] = array();
 
         foreach ($retailops_status_history  as $history) {

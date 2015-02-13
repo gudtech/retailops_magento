@@ -75,4 +75,26 @@ class RetailOps_Api_Model_Order_Status_History extends Mage_Core_Model_Abstract
 
         return $this;
     }
+
+    /**
+     * @param Mage_Sales_Model_Order $order
+     *
+     * @return RetailOps_Api_Model_Resource_Order_Status_History_Collection
+     */
+    public function getRetailOpsStatusHistory(Mage_Sales_Model_Order $order)
+    {
+
+        $statusHistory = Mage::getResourceModel('retailops_api/order_status_history_collection')
+            ->setOrderFilter($order)
+            ->setOrder('created_at', 'desc')
+            ->setOrder('entity_id', 'desc');
+
+        if ($order->getId()) {
+            foreach ($statusHistory as $status) {
+                $status->setOrder($order);
+            }
+        }
+
+        return $statusHistory;
+    }
 }
