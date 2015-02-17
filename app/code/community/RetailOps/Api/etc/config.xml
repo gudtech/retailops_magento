@@ -21,8 +21,6 @@
             </retailops_api>
             <retailops_api_resource>
                 <class>RetailOps_Api_Model_Resource</class>
-                <entities>
-                </entities>
             </retailops_api_resource>
         </models>
         <blocks>
