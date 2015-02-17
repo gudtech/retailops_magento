@@ -63,7 +63,7 @@ class RetailOps_Api_Block_Adminhtml_Sales_Order_View_Tab_Retailops
      */
     public function getRetailOpsStatusHistory()
     {
-        return Mage::helper('retailops_api')->getRetailOpsStatusHistory($this->getOrder());
+        return Mage::getModel('retailops_api/order_status_history')->getRetailOpsStatusHistory($this->getOrder());
     }
 
     /**

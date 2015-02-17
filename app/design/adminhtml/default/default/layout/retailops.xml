@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+{license_text}
+-->
 <layout>
     <adminhtml_sales_order_view>
         <reference name="sales_order_tabs">

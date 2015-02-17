@@ -34,6 +34,8 @@ $table = $installer->getConnection()
         array('parent_id'))
     ->addIndex($installer->getIdxName('retailops_api/order_status_history', array('created_at')),
         array('created_at'))
+    ->addIndex($installer->getIdxName('retailops_api/order_status_history', array('status')),
+        array('status'))
     ->addForeignKey($installer->getFkName('retailops_api/order_status_history', 'parent_id', 'sales/order', 'entity_id'),
         'parent_id', $installer->getTable('sales/order'), 'entity_id',
         Varien_Db_Ddl_Table::ACTION_CASCADE, Varien_Db_Ddl_Table::ACTION_CASCADE)
