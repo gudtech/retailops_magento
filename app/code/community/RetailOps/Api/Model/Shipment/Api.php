@@ -16,17 +16,15 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
     public function shipmentPush($shipments)
     {
 
-        $helper = Mage::helper('retailops_api');
-        $shipmentCollection = $helper->getVarienDataCollection($shipments);
-
-        Mage::dispatchEvent(
-            'retailops_shipment_push_before',
-            array('shipments' => $shipmentCollection)
-        );
-
         $result = array();
         $count = 0;
-        foreach ($shipmentCollection as $shipment) {
+        foreach ($shipments as $shipmentData) {
+            $shipment = new Varien_Object($shipmentData);
+
+            Mage::dispatchEvent(
+                'retailops_shipment_push_record',
+                array('record' => $shipment)
+            );
 
             $result[$count]['order_increment_id'] = $shipment->getOrderIncrementId();
 
@@ -76,12 +74,6 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
             }
             $count++;
         }
-
-        $resultCollection = $helper->getVarienDataCollection($result);
-        Mage::dispatchEvent(
-            'retailops_shipment_push_after',
-            array('shipments' => $shipmentCollection, 'results' => $resultCollection)
-        );
 
         return $result;
     }
