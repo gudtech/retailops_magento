@@ -7,7 +7,9 @@ $installer = $this;
 
 $installer->startSetup();
 
-$installer->getConnection()->addColumn($installer->getTable('sales/order'), 'retailops_status', 'varchar(255)');
+$installer->getConnection()->addColumn($installer->getTable('sales/order'), 'retailops_status', 'varchar(255)')
+    ->addIndex($installer->getIdxName('sales/order', array('retailops_status')),
+        array('retailops_status'));
 
 /**
  * Create table 'retail_ops/order_status_history'

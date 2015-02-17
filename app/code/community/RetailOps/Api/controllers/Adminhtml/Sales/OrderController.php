@@ -17,7 +17,6 @@ class RetailOps_Api_Adminhtml_Sales_OrderController extends Mage_Adminhtml_Sales
                 $data = $this->getRequest()->getPost('retops');
 
                 $order->setRetailopsStatus($data['status']);
-                $order->setRetailopsComment($data['comment']);
                 $order->save();
 
                 $history = Mage::getModel('retailops_api/order_status_history')

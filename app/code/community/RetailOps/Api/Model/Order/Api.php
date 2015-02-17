@@ -82,7 +82,7 @@ class RetailOps_Api_Model_Order_Api extends Mage_Sales_Model_Order_Api
                 $recordObj = new Varien_Object($record);
 
                 Mage::dispatchEvent(
-                    'retailops_catalog_pull_record',
+                    'retailops_order_pull_record',
                     array('record' => $recordObj)
                 );
 
