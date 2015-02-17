@@ -28,7 +28,7 @@ class RetailOps_Api_Model_Order_Api extends Mage_Sales_Model_Order_Api
      */
     public function orderPull($filters = null)
     {
-        $orders = array();
+        $result = array();
         //TODO: add full name logic
         $billingAliasName = 'billing_o_a';
         $shippingAliasName = 'shipping_o_a';
@@ -56,51 +56,44 @@ class RetailOps_Api_Model_Order_Api extends Mage_Sales_Model_Order_Api
             );
 
         Mage::dispatchEvent(
-            'retailops_order_pull_before',
-            array('orders' => $orderCollection)
+            'retailops_order_collection_prepare',
+            array('collection' => $orderCollection)
         );
 
-        $start = 0;
-        $limit = 0;
+        $result['totalCount'] = $orderCollection->getSize();
+        $result['count'] = count($orderCollection);
 
-        if (isset($filters['start'])) {
-            $start = $filters['start'];
-            unset($filters['start']);
-        }
-
-        if (isset($filters['limit'])) {
-            $limit = $filters['limit'];
-            unset($filters['limit']);
-        }
-
-        /** @var $apiHelper Mage_Api_Helper_Data */
+        /** @var $apiHelper Retailops_Api_Helper_Data */
         $apiHelper = Mage::helper('retailops_api');
+        $filters = $apiHelper->applyPager($orderCollection, $filters);
         $filters = $apiHelper->parseFilters($filters, $this->_attributesMap['order']);
+
         try {
             foreach ($filters as $field => $value) {
                 $orderCollection->addFieldToFilter($field, $value);
             }
-            if ($limit || $start) {
-                $orderCollection->getSelect()->limit($limit, $start);
-            }
-
         } catch (Mage_Core_Exception $e) {
             $this->_fault('filters_invalid', $e->getMessage());
         }
-        foreach ($orderCollection as $order) {
-            $record = $this->orderInfo($order);
-            $orders[] = $record;
-            $recordObj = new Varien_Object($record);
 
-            Mage::dispatchEvent(
-                'retailops_catalog_pull_record',
-                array('record' => $recordObj)
-            );
+        try {
+            foreach ($orderCollection as $order) {
+                $record = $this->orderInfo($order);
+                $orders[] = $record;
+                $recordObj = new Varien_Object($record);
+
+                Mage::dispatchEvent(
+                    'retailops_catalog_pull_record',
+                    array('record' => $recordObj)
+                );
+            }
+
+            $result['records'] = $orders;
+        } catch (Mage_Core_Exception $e) {
+            $this->_fault('order_pull_error', $e->getMessage());
         }
 
-
-
-        return $orders;
+        return $result;
     }
 
     /**
