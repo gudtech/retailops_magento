@@ -79,13 +79,14 @@ class RetailOps_Api_Model_Order_Api extends Mage_Sales_Model_Order_Api
         try {
             foreach ($orderCollection as $order) {
                 $record = $this->orderInfo($order);
-                $orders[] = $record;
                 $recordObj = new Varien_Object($record);
 
                 Mage::dispatchEvent(
                     'retailops_catalog_pull_record',
                     array('record' => $recordObj)
                 );
+
+                $orders[] = $record;
             }
 
             $result['records'] = $orders;
