@@ -5,16 +5,16 @@
 
 class RetailOps_Api_Helper_Data extends Mage_Api_Helper_Data
 {
-    const RETAILOPS_ORDER_PROCESSING = 'retailops_processing';
-    const RETAILOPS_ORDER_COMPLETE = 'retailops_complete';
-    const RETAILOPS_ORDER_READY = 'retailops_ready';
+    const RETAILOPS_ORDER_PROCESSING    = 'retailops_processing';
+    const RETAILOPS_ORDER_COMPLETE      = 'retailops_complete';
+    const RETAILOPS_ORDER_READY         = 'retailops_ready';
 
     public function getRetOpsStatuses()
     {
         return array(
-            self::RETAILOPS_ORDER_PROCESSING => 'Processing',
-            self::RETAILOPS_ORDER_COMPLETE => 'Complete',
-            self::RETAILOPS_ORDER_CANCELED => 'Ready'
+            self::RETAILOPS_ORDER_PROCESSING    => 'Processing',
+            self::RETAILOPS_ORDER_COMPLETE      => 'Complete',
+            self::RETAILOPS_ORDER_READY         => 'Ready'
         );
     }
 
@@ -60,19 +60,5 @@ class RetailOps_Api_Helper_Data extends Mage_Api_Helper_Data
         }
 
         return $result;
-    }
-
-    /**
-     * @param array $items
-     * @return Varien_Data_Collection
-     */
-    public function getVarienDataCollection($items) {
-        $collection = new Varien_Data_Collection();
-        foreach ($items as $item) {
-            $varienObject = new Varien_Object();
-            $varienObject->setData($item);
-            $collection->addItem($varienObject);
-        }
-        return $collection;
     }
 }

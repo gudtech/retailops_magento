@@ -88,15 +88,17 @@ class RetailOps_Api_Model_Order_Api extends Mage_Sales_Model_Order_Api
             $this->_fault('filters_invalid', $e->getMessage());
         }
         foreach ($orderCollection as $order) {
-            $orders[] = $this->orderInfo($order);
+            $record = $this->orderInfo($order);
+            $orders[] = $record;
+            $recordObj = new Varien_Object($record);
+
+            Mage::dispatchEvent(
+                'retailops_catalog_pull_record',
+                array('record' => $recordObj)
+            );
         }
 
-        $resultCollection = $apiHelper->getVarienDataCollection($orders);
 
-        Mage::dispatchEvent(
-            'retailops_order_pull_after',
-            array('results' => $resultCollection)
-        );
 
         return $orders;
     }
