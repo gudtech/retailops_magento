@@ -17,9 +17,7 @@
             </span>
             <span class="field-row">
                 <label class="normal" for="status_comment"><?php echo Mage::helper('sales')->__('Comment') ?></label>
-                <textarea name="retops[comment]" rows="3" cols="5" style="height:6em; width:99%;" id="retops_comment">
-                    <?php echo $this->getOrder()->getRetailopsStatusComment() ?>
-                </textarea>
+                <textarea name="retops[comment]" rows="3" cols="5" style="height:6em; width:99%;" id="retops_comment"><?php echo $this->getOrder()->getRetailopsStatusComment() ?></textarea>
             </span>
             <div class="f-right">
                 <?php echo $this->getChildHtml('submit_button') ?>
