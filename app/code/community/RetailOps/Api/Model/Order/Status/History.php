@@ -1,4 +1,7 @@
 <?php
+/**
+{license_text}
+ */
 
 /**
  * Order status history comments
@@ -83,7 +86,6 @@ class RetailOps_Api_Model_Order_Status_History extends Mage_Core_Model_Abstract
      */
     public function getRetailOpsStatusHistory(Mage_Sales_Model_Order $order)
     {
-
         $statusHistory = Mage::getResourceModel('retailops_api/order_status_history_collection')
             ->setOrderFilter($order)
             ->setOrder('created_at', 'desc')

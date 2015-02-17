@@ -74,7 +74,7 @@ class RetailOps_Api_Model_Order_Api extends Mage_Sales_Model_Order_Api
         }
 
         /** @var $apiHelper Mage_Api_Helper_Data */
-        $apiHelper = Mage::helper('api');
+        $apiHelper = Mage::helper('retailops_api');
         $filters = $apiHelper->parseFilters($filters, $this->_attributesMap['order']);
         try {
             foreach ($filters as $field => $value) {
@@ -91,9 +91,11 @@ class RetailOps_Api_Model_Order_Api extends Mage_Sales_Model_Order_Api
             $orders[] = $this->orderInfo($order);
         }
 
+        $resultCollection = $apiHelper->getVarienDataCollection($orders);
+
         Mage::dispatchEvent(
             'retailops_order_pull_after',
-            array('results' => $orders)
+            array('results' => $resultCollection)
         );
 
         return $orders;

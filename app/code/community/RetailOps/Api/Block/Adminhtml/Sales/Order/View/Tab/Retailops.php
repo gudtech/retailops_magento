@@ -1,4 +1,7 @@
 <?php
+/**
+{license_text}
+ */
 
 /**
  * RetailOps information tab

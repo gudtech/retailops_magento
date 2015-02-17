@@ -1,4 +1,7 @@
 <?php
+/**
+{license_text}
+ */
 
 /**
  * Flat retailops order status history collection

@@ -1,4 +1,7 @@
 <?php
+/**
+{license_text}
+ */
 
 $installer = $this;
 
@@ -35,6 +38,7 @@ $table = $installer->getConnection()
         'parent_id', $installer->getTable('sales/order'), 'entity_id',
         Varien_Db_Ddl_Table::ACTION_CASCADE, Varien_Db_Ddl_Table::ACTION_CASCADE)
     ->setComment('Sales Flat Order Status History');
+
 $installer->getConnection()->createTable($table);
 
 $installer->endSetup();

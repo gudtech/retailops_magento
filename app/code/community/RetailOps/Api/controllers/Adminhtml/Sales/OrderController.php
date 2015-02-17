@@ -1,4 +1,7 @@
 <?php
+/**
+{license_text}
+ */
 
 class RetailOps_Api_Adminhtml_Sales_OrderController extends Mage_Adminhtml_Sales_OrderController
 {
