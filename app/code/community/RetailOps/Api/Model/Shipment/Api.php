@@ -72,7 +72,7 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
 
             } catch (Mage_Core_Exception $e) {
                 $result[$count]['status'] = 'failed';
-                $result[$count]['message'] = Mage::helper('retailops_api')->__('');
+                $result[$count]['message'] = Mage::helper('retailops_api')->__('Cannot Create Shipment');
             }
             $count++;
         }
@@ -137,13 +137,12 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                     ->addObject($shipment->getOrder())
                     ->save();
                 $shipment->sendEmail($email, ($includeComment ? $comment : ''));
+                $result['status'] = 'success';
+                $result['shipment_increment_id'] = $shipment->getIncrementId();
             } catch (Mage_Core_Exception $e) {
                 $result['status'] = 'failed';
                 $result['message'] = $e->getMessage();
             }
-
-            $result['status'] = 'success';
-            $result['shipment_increment_id'] = $shipment->getIncrementId();
         } else {
             $result['status'] = 'failed';
             $result['message'] = Mage::helper('retailops_api')->__('Can not create shipment');
