@@ -86,7 +86,7 @@ class RetailOps_Api_Model_Order_Api extends Mage_Sales_Model_Order_Api
                     array('record' => $recordObj)
                 );
 
-                $orders[] = $record;
+                $orders[] = $recordObj->getData();
             }
 
             $result['records'] = $orders;
