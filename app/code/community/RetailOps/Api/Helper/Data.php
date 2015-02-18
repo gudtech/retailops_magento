@@ -5,19 +5,6 @@
 
 class RetailOps_Api_Helper_Data extends Mage_Api_Helper_Data
 {
-    /**
-     * @param $items
-     * @return Varien_Data_Collection
-     */
-    public function getVarienDataCollection($items) {
-        $collection = new Varien_Data_Collection();
-        foreach ($items as $item) {
-            $varienObject = new Varien_Object();
-            $varienObject->setData($item);
-            $collection->addItem($varienObject);
-        }
-        return $collection;
-    }
     const DEFAULT_LIMIT = 10;
 
     /**
