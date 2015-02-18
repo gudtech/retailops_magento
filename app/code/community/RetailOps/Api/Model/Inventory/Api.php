@@ -56,25 +56,25 @@ class RetailOps_Api_Model_Inventory_Api extends Mage_CatalogInventory_Model_Stoc
 
         foreach ($itemData as $item) {
 
-            $recordObj = new Varien_Object($item);
+            $itemObj = new Varien_Object($item);
 
             Mage::dispatchEvent(
                 'retailops_inventory_push_record',
-                array('record' => $recordObj)
+                array('record' => $itemObj)
             );
 
             $result = array();
-            $result['sku'] = $item['sku'];
+            $result['sku'] = $itemObj->getSku();
             try {
-                $item['qty'] = $item['quantity'];
-                $qty = $item['qty'];
+                $itemObj->setQty($itemObj->getQuantity());
+                $qty = $itemObj->getQty();
                 foreach ($orderItems as $orderItem) {
                     if ($orderItem->getSku() === $orderItem->getSku()) {
                         $qty -= $orderItem->getQtyOrdered();
                     }
                 }
-                $item['qty'] = $qty;
-                $this->update($item['sku'], $item);
+                $itemObj->setQty($qty);
+                $this->update($itemObj->getSku(), $itemObj->getData());
                 $result['status'] = 'success';
             } catch (Mage_Core_Exception $e) {
                 $result['status'] = 'failed';
