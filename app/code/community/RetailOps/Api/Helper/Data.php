@@ -9,7 +9,6 @@ class RetailOps_Api_Helper_Data extends Mage_Api_Helper_Data
     const RETAILOPS_ORDER_COMPLETE      = 'retailops_complete';
     const RETAILOPS_ORDER_READY         = 'retailops_ready';
 
-
     const DEFAULT_LIMIT = 10;
 
     public function getRetOpsStatuses()

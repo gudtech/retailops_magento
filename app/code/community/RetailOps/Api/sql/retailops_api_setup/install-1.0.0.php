@@ -7,9 +7,20 @@ $installer = $this;
 
 $installer->startSetup();
 
-$installer->getConnection()->addColumn($installer->getTable('sales/order'), 'retailops_status', 'varchar(255)')
-    ->addIndex($installer->getIdxName('sales/order', array('retailops_status')),
-        array('retailops_status'));
+$installer->getConnection()
+    ->addColumn($installer->getTable('sales/order'),
+        'retailops_status',
+        array(
+            'type'      => Varien_Db_Ddl_Table::TYPE_TEXT,
+            'length'    => 255,
+            'default'   => RetailOps_Api_Helper_Data::RETAILOPS_ORDER_PROCESSING,
+            'comment'   => 'RetailOps Order Status'
+            ));
+$installer->getConnection()
+    ->addIndex($installer->getTable('sales/order'),
+        $installer->getIdxName('sales/order', array('retailops_status')),
+        array('retailops_status')
+    );
 
 /**
  * Create table 'retail_ops/order_status_history'
