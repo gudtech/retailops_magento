@@ -5,6 +5,8 @@
 
 class RetailOps_Api_Model_Resource_Api extends Mage_Core_Model_Resource_Db_Abstract
 {
+    const RETAILOPS_ORDER_STATUS_READY = 'retailops_ready';
+
     protected function _construct()
     {
         $this->_setResource('catalog');
@@ -38,5 +40,24 @@ class RetailOps_Api_Model_Resource_Api extends Mage_Core_Model_Resource_Db_Abstr
         $select->where($where);
 
         return $this->_getReadAdapter()->fetchCol($select);
+    }
+
+    /**
+     * Gets Order Items For Orders with retailops_ready status
+     *
+     * @return Mage_Sales_Order_Item_Collection
+     */
+    public function getRetailopsReadyOrderItems()
+    {
+        $collection = Mage::getModel('sales/order_item')->getCollection();
+
+        $collection->getSelect()
+            ->join(
+                array('orders' => 'sales_flat_order'),
+                'orders.entity_id = main_table.order_id',
+                array('orders.retailops_status')
+            );
+        $collection->addFieldToFilter('orders.retailops_status', array(array('eq' => self::RETAILOPS_ORDER_STATUS_READY)));
+        return $collection;
     }
 }

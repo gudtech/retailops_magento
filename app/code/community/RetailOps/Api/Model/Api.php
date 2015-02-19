@@ -18,10 +18,10 @@ class RetailOps_Api_Model_Api extends Mage_Api_Model_Resource_Abstract
     /**
      * Product Inventory Update
      *
-     * @param array $productData
+     * @param array $itemData
      * @return array
      */
-    public function inventoryPush($productData = null){
-        return Mage::getModel('retailops_api/inventory_api')->inventoryPush($productData);
+    public function inventoryPush($itemData = null){
+        return Mage::getModel('retailops_api/inventory_api')->inventoryPush($itemData);
     }
 }
