@@ -17,13 +17,13 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
         foreach ($returns as $return) {
 
             $returnObj = new Varien_Object($return);
-
+            Mage::log($returnObj->getOrderIncrementId());
             Mage::dispatchEvent(
                 'retailops_return_push_record',
                 array('record' => $returnObj)
             );
 
-            $result[] = $this->create($returnObj->getOrderIncrementId(), $returnObj->getCreditMemoData(),
+            $result[] = $this->create($returnObj->getOrderIncrementId(), $returnObj->getCreditmemoData(),
                 $returnObj->getComment(), $returnObj->getNotifyCustomer(), $returnObj->getIncludeComment(),
                 $returnObj->getRefundToStoreCreditAmount());
         }
@@ -58,8 +58,10 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
             }
             $creditmemoData = $this->_prepareCreateData($creditmemoData);
 
+            /** @var $service Mage_Sales_Model_Service_Order */
+            $service = Mage::getModel('sales/service_order', $order);
             /** @var $creditmemo Mage_Sales_Model_Order_Creditmemo */
-            $creditmemo = $this->prepareCreditmemo($creditmemoData, $order);
+            $creditmemo = $service->prepareCreditmemo($creditmemoData, $order);
 
             // refund to Store Credit
             if ($refundToStoreCreditAmount) {
@@ -104,50 +106,6 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
         }
 
         return $result;
-    }
-
-    /**
-     * Prepare order creditmemo based on order items and requested params
-     *
-     * @param array $data
-     * @return Mage_Sales_Model_Order_Creditmemo
-     */
-    public function prepareCreditmemo($data = array(), Mage_Sales_Model_Order $order)
-    {
-        $totalQty = 0;
-        $convertor = Mage::getModel('sales/convert_order');
-        $creditmemo = $convertor->toCreditmemo($order);
-        $qtys = isset($data['qtys']) ? $data['qtys'] : array();
-        $this->updateLocaleNumbers($qtys);
-
-        foreach ($order->getAllItems() as $orderItem) {
-            if (!$this->_canRefundItem($orderItem, $qtys)) {
-                continue;
-            }
-
-            $item = $convertor->itemToCreditmemoItem($orderItem);
-            if ($orderItem->isDummy()) {
-                $qty = 1;
-                $orderItem->setLockedDoShip(true);
-            } else {
-                if (isset($qtys[$orderItem->getSku()])) {
-                    $qty = (float) $qtys[$orderItem->getSku()];
-                } elseif (!count($qtys)) {
-                    $qty = $orderItem->getQtyToRefund();
-                } else {
-                    continue;
-                }
-            }
-            $totalQty += $qty;
-            $item->setQty($qty);
-            $creditmemo->addItem($item);
-        }
-        $creditmemo->setTotalQty($totalQty);
-
-        $this->_initCreditmemoData($creditmemo, $data);
-
-        $creditmemo->collectTotals();
-        return $creditmemo;
     }
 
     /***
