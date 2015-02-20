@@ -5,8 +5,6 @@
 
 class RetailOps_Api_Model_Resource_Api extends Mage_Core_Model_Resource_Db_Abstract
 {
-    const RETAILOPS_ORDER_STATUS_READY = 'retailops_ready';
-
     protected function _construct()
     {
         $this->_setResource('catalog');
@@ -52,12 +50,12 @@ class RetailOps_Api_Model_Resource_Api extends Mage_Core_Model_Resource_Db_Abstr
         $collection = Mage::getModel('sales/order_item')->getCollection();
 
         $collection->getSelect()
-            ->Join(
+            ->join(
                 array('orders' => $this->getTable('sales/order')),
                 'orders.entity_id = main_table.order_id',
                 array('orders.retailops_status')
             )
-            ->Where('orders.retailops_status = (?)', RetailOps_Api_Helper_Data::RETAILOPS_ORDER_READY);
+            ->where('orders.retailops_status = (?)', RetailOps_Api_Helper_Data::RETAILOPS_ORDER_READY);
         return $collection;
     }
 }
