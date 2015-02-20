@@ -19,295 +19,113 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
         $result = array();
         $count = 0;
         foreach ($shipments as $shipmentData) {
-            $shipment = new Varien_Object($shipmentData);
-
-            Mage::dispatchEvent(
-                'retailops_shipment_push_record',
-                array('record' => $shipment)
-            );
-
-            $result[$count]['order_increment_id'] = $shipment->getOrderIncrementId();
-
             try{
+                $shipment = new Varien_Object($shipmentData);
+
+                Mage::dispatchEvent(
+                    'retailops_shipment_push_record',
+                    array('record' => $shipment)
+                );
+
+                $result[$count]['order_increment_id'] = $shipment->getOrderIncrementId();
+
                 $orderIncrementId = $shipment->getOrderIncrementId();
                 $shipmentInfo = $shipment->getShipment();
                 $trackInfo = $shipment->getTrack();
                 $invoiceInfo = $shipment->getInvoice();
 
                 // create shipment
-                $shipmentResult = $this->createShipment($orderIncrementId,
-                    $shipmentInfo['items_qty'],
-                    $shipmentInfo['comment'],
-                    $shipmentInfo['email'],
-                    $shipmentInfo['include_comment']
-                );
+                try {
+                    $shipmentResult = array();
+                    $shipmentIncrementId = $this->create($orderIncrementId,
+                        $shipmentInfo['items_qty'],
+                        $shipmentInfo['comment'],
+                        $shipmentInfo['email'],
+                        $shipmentInfo['include_comment']
+                    );
+
+                    if ($shipmentIncrementId) {
+                        $shipmentResult['status'] = 'success';
+                        $shipmentResult['shipment_increment_id'] = $shipmentIncrementId;
+                    } else {
+                        $shipmentResult['status'] = 'failed';
+                        $shipmentResult['message'] = Mage::helper('retailops_api')->__('Can not create shipment');
+                    }
+                } catch (Mage_Core_Exception $e) {
+                    $shipmentResult['status'] = 'failed';
+                    $shipmentResult['message'] = $e->getMessage();
+                }
+
                 $result[$count]['shipment_result'] = $shipmentResult;
 
                 // add shipment track
-                $trackResult = array();
-                if (isset($shipmentResult['shipment_increment_id'])) {
-                    $trackResult = $this->addTrack($shipmentResult['shipment_increment_id'],
-                        $trackInfo['carrier'],
-                        $trackInfo['title'],
-                        $trackInfo['track_number']
-                    );
+                try {
+                    $trackResult = array();
+
+                    if (isset($shipmentResult['shipment_increment_id'])) {
+                        $trackId = $this->addTrack($shipmentResult['shipment_increment_id'],
+                            $trackInfo['carrier'],
+                            $trackInfo['title'],
+                            $trackInfo['track_number']
+                        );
+
+                        $trackResult['status'] = 'success';
+                        $trackResult['track_id'] = $trackId;
+
+                    } else {
+                        $trackResult['status'] = 'failed';
+                        $trackResult['message'] = Mage::helper('retailops_api')->__('Can not add track to the shipment');
+                    }
+                } catch (Mage_Core_Exception $e) {
+                    $trackResult['status'] = 'failed';
+                    $trackResult['message'] = $e->getMessage();
                 }
+
                 $result[$count]['track_result'] = $trackResult;
 
                 // create invoice
-                $invoiceResult = $this->createInvoice(
-                    $orderIncrementId,
-                    $shipmentInfo['items_qty'],    // invoice the items to be shipped
-                    $invoiceInfo['comment'],
-                    $invoiceInfo['email'],
-                    $invoiceInfo['include_comment']
-                );
+                try {
+                    $invoiceIncrementId = Mage::getModel('sales/order_invoice_api')->create(
+                        $orderIncrementId,
+                        $shipmentInfo['items_qty'],    // invoice the items to be shipped
+                        $invoiceInfo['comment'],
+                        $invoiceInfo['email'],
+                        $invoiceInfo['include_comment']
+                    );
+
+                    $invoiceResult['status'] = 'success';
+                    $invoiceResult['invoice_increment_id'] = $invoiceIncrementId;
+
+                } catch (Mage_Core_Exception $e) {
+                    $invoiceResult['status'] = 'failed';
+                    $invoiceResult['message'] = $e->getMessage();
+                }
+
                 $result[$count]['invoice_result'] = $invoiceResult;
 
                 // capture invoice
-                $invoiceCaptureResult = $this->captureInvoice($invoiceResult['invoice_increment_id']);
+                try {
+                    $invoiceCaptured = Mage::getModel('sales/order_invoice_api')
+                        ->capture($invoiceResult['invoice_increment_id']);
+                    if ($invoiceCaptured) {
+                        $invoiceCaptureResult['status'] = 'success';
+                        $invoiceCaptureResult['message'] = Mage::helper('retailops_api')->__('Invoice is captured');
+                    } else {
+                        $invoiceCaptureResult['status'] = 'failed';
+                        $invoiceCaptureResult['message'] = Mage::helper('retailops_api')->__('Invoice cannot be captured');
+                    }
+                } catch (Mage_Core_Exception $e) {
+                    $invoiceCaptureResult['status'] = 'failed';
+                    $invoiceCaptureResult['message'] = $e->getMessage();
+                }
                 $result[$count]['invoice_capture_result'] = $invoiceCaptureResult;
 
             } catch (Mage_Core_Exception $e) {
                 $result[$count]['status'] = 'failed';
                 $result[$count]['message'] = Mage::helper('retailops_api')->__('Cannot Create Shipment');
             }
+
             $count++;
-        }
-
-        return $result;
-    }
-
-    /**
-     * Create new shipment for order
-     *
-     * @param string $orderIncrementId
-     * @param array $itemsQty
-     * @param string $comment
-     * @param boolean $email
-     * @param boolean $includeComment
-     * @return array
-     */
-    public function createShipment($orderIncrementId, $itemsQty = array(), $comment = null, $email = false,
-                           $includeComment = false
-    ) {
-        $result = array();
-        $order = Mage::getModel('sales/order')->loadByIncrementId($orderIncrementId);
-
-        /**
-         * Check order existing
-         */
-        if (!$order->getId()) {
-            $result['status'] = 'failed';
-            $result['message'] = 'order_not_exists';
-
-            return $result;
-        }
-
-        /**
-         * Check shipment create availability
-         */
-        if (!$order->canShip()) {
-            $result['status'] = 'failed';
-            $result['message'] = Mage::helper('sales')->__('Cannot do shipment for order.');
-
-            return $result;
-        }
-
-        /* @var $shipment Mage_Sales_Model_Order_Shipment */
-        $shipment = $order->prepareShipment($itemsQty);
-        if ($shipment) {
-            $shipment->register();
-            $shipment->addComment($comment, $email && $includeComment);
-            if ($email) {
-                $shipment->setEmailSent(true);
-            }
-            $shipment->getOrder()->setIsInProcess(true);
-            try {
-                $transactionSave = Mage::getModel('core/resource_transaction')
-                    ->addObject($shipment)
-                    ->addObject($shipment->getOrder())
-                    ->save();
-                $shipment->sendEmail($email, ($includeComment ? $comment : ''));
-                $result['status'] = 'success';
-                $result['shipment_increment_id'] = $shipment->getIncrementId();
-            } catch (Mage_Core_Exception $e) {
-                $result['status'] = 'failed';
-                $result['message'] = $e->getMessage();
-            }
-        } else {
-            $result['status'] = 'failed';
-            $result['message'] = Mage::helper('retailops_api')->__('Can not create shipment');
-        }
-
-        return $result;
-    }
-
-    /**
-     * Add tracking number to order
-     *
-     * @param string $shipmentIncrementId
-     * @param string $carrier
-     * @param string $title
-     * @param string $trackNumber
-     * @return array
-     */
-    public function addTrack($shipmentIncrementId, $carrier, $title, $trackNumber)
-    {
-        $result = array();
-        $shipment = Mage::getModel('sales/order_shipment')->loadByIncrementId($shipmentIncrementId);
-
-        /* @var $shipment Mage_Sales_Model_Order_Shipment */
-
-        if (!$shipment->getId()) {
-            $result['status'] = 'failed';
-            $result['message'] = 'shipment_not_exists';
-
-            return $result;
-        }
-
-        $carriers = $this->_getCarriers($shipment);
-
-        if (!isset($carriers[$carrier])) {
-            $result['status'] = 'failed';
-            $result['message'] = Mage::helper('sales')->__('Invalid carrier specified.');
-
-            return $result;
-        }
-
-        $track = Mage::getModel('sales/order_shipment_track')
-            ->setNumber($trackNumber)
-            ->setCarrierCode($carrier)
-            ->setTitle($title);
-
-        $shipment->addTrack($track);
-
-        try {
-            $shipment->save();
-            $track->save();
-            $result['status'] = 'success';
-            $result['track_id'] = $track->getId();
-        } catch (Mage_Core_Exception $e) {
-            $result['status'] = 'failed';
-            $result['message'] = $e->getMessage();
-        }
-
-        return $result;
-    }
-
-    /**
-     * Create new invoice for order
-     *
-     * @param string $orderIncrementId
-     * @param array $itemsQty
-     * @param string $comment
-     * @param boolean $email
-     * @param boolean $includeComment
-     * @return array
-     */
-    public function createInvoice($orderIncrementId, $itemsQty, $comment = null, $email = false, $includeComment = false)
-    {
-        $result = array();
-        $order = Mage::getModel('sales/order')->loadByIncrementId($orderIncrementId);
-
-        /* @var $order Mage_Sales_Model_Order */
-        /**
-         * Check order existing
-         */
-        if (!$order->getId()) {
-            $result['status'] = 'failed';
-            $result['message'] = 'order_not_exists';
-
-            return $result;
-        }
-
-        /**
-         * Check invoice create availability
-         */
-        if (!$order->canInvoice()) {
-            $result['status'] = 'failed';
-            $result['message'] = Mage::helper('sales')->__('Cannot do invoice for order.');
-
-            return $result;
-        }
-
-        $invoice = $order->prepareInvoice($itemsQty);
-
-        $invoice->register();
-
-        if ($comment !== null) {
-            $invoice->addComment($comment, $email);
-        }
-
-        if ($email) {
-            $invoice->setEmailSent(true);
-        }
-
-        $invoice->getOrder()->setIsInProcess(true);
-
-        try {
-            $transactionSave = Mage::getModel('core/resource_transaction')
-                ->addObject($invoice)
-                ->addObject($invoice->getOrder())
-                ->save();
-
-            $invoice->sendEmail($email, ($includeComment ? $comment : ''));
-
-            $result['status'] = 'success';
-            $result['invoice_increment_id'] = $invoice->getIncrementId();
-
-        } catch (Mage_Core_Exception $e) {
-            $result['status'] = 'failed';
-            $result['message'] = $e->getMessage();
-        }
-
-        return $result;
-    }
-
-    /**
-     * Capture invoice
-     *
-     * @param string $invoiceIncrementId
-     * @return array
-     */
-    public function captureInvoice($invoiceIncrementId)
-    {
-        $result = array();
-        $invoice = Mage::getModel('sales/order_invoice')->loadByIncrementId($invoiceIncrementId);
-
-        /* @var $invoice Mage_Sales_Model_Order_Invoice */
-
-        if (!$invoice->getId()) {
-            $result['status'] = 'failed';
-            $result['message'] = 'invoice_not_exists';
-
-            return $result;
-        }
-
-        if (!$invoice->canCapture()) {
-            $result['status'] = 'failed';
-            $result['message'] = Mage::helper('sales')->__('Invoice cannot be captured.');
-
-            return $result;
-        }
-
-        try {
-            $invoice->capture();
-            $invoice->getOrder()->setIsInProcess(true);
-            $transactionSave = Mage::getModel('core/resource_transaction')
-                ->addObject($invoice)
-                ->addObject($invoice->getOrder())
-                ->save();
-
-            $result['status'] = 'success';
-            $result['message'] = Mage::helper('retailops_api')->__('Invoice is captured');
-
-        } catch (Mage_Core_Exception $e) {
-            $result['status'] = 'failed';
-            $result['message'] = $e->getMessage();
-        } catch (Exception $e) {
-            $result['status'] = 'failed';
-            $result['message'] = Mage::helper('sales')->__('Invoice capturing problem.');
         }
 
         return $result;
