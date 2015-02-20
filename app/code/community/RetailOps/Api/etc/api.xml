@@ -16,7 +16,7 @@
                         <acl>retailops/catalog_pull</acl>
                     </catalog_pull>
                     <return_push translate="title" module="retailops_api"><!-- list projects -->
-                        <title>Retrieve list of products</title>
+                        <title>Create Credit Memo</title>
                         <method>returnPush</method>
                         <acl>retailops/return_push</acl>
                     </return_push>
@@ -50,6 +50,9 @@
                     <order_update translate="title" module="retailops_api">
                         <title>Order Update</title>
                     </order_update>
+                    <return_push translate="title" module="retailops_api">
+                        <title>Return Push</title>
+                    </return_push>
                     <shipment_push translate="title" module="retailops_api">
                         <title>Shipment Push</title>
                     </shipment_push>

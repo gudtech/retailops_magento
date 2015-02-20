@@ -17,7 +17,6 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
         foreach ($returns as $return) {
 
             $returnObj = new Varien_Object($return);
-            Mage::log($returnObj->getOrderIncrementId());
             Mage::dispatchEvent(
                 'retailops_return_push_record',
                 array('record' => $returnObj)
@@ -107,32 +106,4 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
 
         return $result;
     }
-
-    /***
-    * Hook method, could be replaced in derived classes
-    *
-    * @param  array $data
-    * @return array
-    */
-    protected function _prepareCreateData($data)
-    {
-        $data = isset($data) ? $data : array();
-
-        if (isset($data['qtys']) && count($data['qtys'])) {
-            $qtysArray = array();
-            foreach ($data['qtys'] as $qKey => $qVal) {
-                // Save backward compatibility
-                if (is_array($qVal)) {
-                    if (isset($qVal['sku']) && isset($qVal['qty'])) {
-                        $qtysArray[$qVal['sku']] = $qVal['qty'];
-                    }
-                } else {
-                    $qtysArray[$qKey] = $qVal;
-                }
-            }
-            $data['qtys'] = $qtysArray;
-        }
-        return $data;
-    }
-
 }
