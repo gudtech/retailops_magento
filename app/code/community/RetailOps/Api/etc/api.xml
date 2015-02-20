@@ -15,6 +15,11 @@
                         <method>catalogPull</method>
                         <acl>retailops/catalog_pull</acl>
                     </catalog_pull>
+                    <order_pull translate="title" module="retailops_api">
+                        <title>Retrieve list of orders</title>
+                        <method>orderPull</method>
+                        <acl>retailops/order_pull</acl>
+                    </order_pull>
                     <inventory_push translate="title" module="retailops_api"><!-- list projects -->
                         <title>Retrieve list of products</title>
                         <method>inventoryPush</method>
