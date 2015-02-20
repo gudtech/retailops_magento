@@ -41,6 +41,23 @@ class RetailOps_Api_Model_Resource_Api extends Mage_Core_Model_Resource_Db_Abstr
     }
 
     /**
+     * Get products ids
+     *
+     * @param array $productSkus
+     * @return array
+     */
+    public function getIdsByProductSkus($productSkus)
+    {
+        if (!$productSkus) {
+            return array();
+        }
+        $select = $this->_getReadAdapter()->select()->from($this->getTable('catalog/product'), array('sku', 'entity_id'));
+        $where = sprintf("sku IN ('%s')", implode("','", $productSkus));
+        $select->where($where);
+        return $this->_getReadAdapter()->fetchAll($select);
+    }
+
+    /**
      * Gets Order Items For Orders with retailops_ready status
      *
      * @return Mage_Sales_Order_Item_Collection

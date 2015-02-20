@@ -16,6 +16,7 @@ class RetailOps_Api_Model_Inventory_Api extends Mage_CatalogInventory_Model_Stoc
         $response = array();
         $orderItemsCollection = Mage::getResourceModel('retailops_api/api')->getRetailopsReadyOrderItems();
         $orderItems = $this->filterOrderItems($orderItemsCollection);
+        $productIds = $this->getProductIds($itemData);
 
         foreach ($itemData as $item) {
             try {
@@ -42,7 +43,7 @@ class RetailOps_Api_Model_Inventory_Api extends Mage_CatalogInventory_Model_Stoc
                     array('record' => $itemObj)
                 );
 
-                Mage::getModel('cataloginventory/stock_item_api_v2')->update($itemObj->getSku(), $itemObj->getData());
+                $this->update($productIds[$itemObj->getSku()], $itemObj->getData());
                 $result['status'] = 'success';
             } catch (Mage_Core_Exception $e) {
                 $result['status'] = 'failed';
@@ -74,7 +75,67 @@ class RetailOps_Api_Model_Inventory_Api extends Mage_CatalogInventory_Model_Stoc
 
         /* calculate total ordered quantity per item */
         foreach ($collection as $item) {
-            $result[$item->getSku()] += $item->getQtyOrdered();
+            if (isset($result[$item->getSku()])){
+                $result[$item->getSku()] += $item->getQtyOrdered();
+            } else {
+                $result[$item->getSku()] = $item->getQtyOrdered();
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Update product stock data
+     *
+     * @param int   $productId
+     * @param array $data
+     * @return bool
+     */
+    public function update($productId, $data)
+    {
+        /** @var $product Mage_Catalog_Model_Product */
+        $product = Mage::getModel('catalog/product');
+
+        $product->setStoreId($this->_getStoreId())
+            ->load($productId);
+
+        if (!$product->getId()) {
+            $this->_fault('not_exists');
+        }
+
+        /** @var $stockItem Mage_CatalogInventory_Model_Stock_Item */
+        $stockItem = $product->getStockItem();
+        $stockData = array_replace($stockItem->getData(), (array)$data);
+        $stockItem->setData($stockData);
+
+        try {
+            $stockItem->save();
+        } catch (Mage_Core_Exception $e) {
+            $this->_fault('not_updated', $e->getMessage());
+        }
+
+        return true;
+    }
+
+    /**
+     * Removes parent order items from collection
+     *
+     * @param $data array
+     * @return array
+     */
+    public function getProductIds($data)
+    {
+        $skus = array();
+
+        foreach ($data as $item) {
+            $skus[] = $item['sku'];
+        }
+
+        $records = Mage::getResourceModel('retailops_api/api')->getIdsByProductSkus($skus);
+
+        foreach ($records as $record) {
+            $result[$record['sku']] = $record['entity_id'];
         }
 
         return $result;
