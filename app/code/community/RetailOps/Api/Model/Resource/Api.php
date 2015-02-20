@@ -52,12 +52,12 @@ class RetailOps_Api_Model_Resource_Api extends Mage_Core_Model_Resource_Db_Abstr
         $collection = Mage::getModel('sales/order_item')->getCollection();
 
         $collection->getSelect()
-            ->join(
-                array('orders' => 'sales_flat_order'),
+            ->Join(
+                array('orders' => $this->getTable('sales/order')),
                 'orders.entity_id = main_table.order_id',
                 array('orders.retailops_status')
-            );
-        $collection->addFieldToFilter('orders.retailops_status', array(array('eq' => self::RETAILOPS_ORDER_STATUS_READY)));
+            )
+            ->Where('orders.retailops_status = (?)', RetailOps_Api_Helper_Data::RETAILOPS_ORDER_READY);
         return $collection;
     }
 }
