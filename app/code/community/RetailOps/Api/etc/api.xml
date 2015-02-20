@@ -20,6 +20,11 @@
                         <method>returnPush</method>
                         <acl>retailops/return_push</acl>
                     </return_push>
+                    <order_pull translate="title" module="retailops_api">
+                        <title>Retrieve list of orders</title>
+                        <method>orderPull</method>
+                        <acl>retailops/order_pull</acl>
+                    </order_pull>
                 </methods>
                 <faults module="retailops_api"><!-- errors that might appear-->
                 </faults>
@@ -48,9 +53,6 @@
                     <shipment_push translate="title" module="retailops_api">
                         <title>Shipment Push</title>
                     </shipment_push>
-                    <return_push translate="title" module="retailops_api">
-                        <title>Return Push</title>
-                    </return_push>
                 </retailops>
             </resources>
         </acl>
