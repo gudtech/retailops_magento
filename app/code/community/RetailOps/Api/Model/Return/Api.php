@@ -15,7 +15,6 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
     {
         $result = array();
         foreach ($returns as $return) {
-
             $returnObj = new Varien_Object($return);
             Mage::dispatchEvent(
                 'retailops_return_push_record',
@@ -24,7 +23,7 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
 
             $result[] = $this->create($returnObj->getOrderIncrementId(), $returnObj->getCreditmemoData(),
                 $returnObj->getComment(), $returnObj->getNotifyCustomer(), $returnObj->getIncludeComment(),
-                $returnObj->getRefundToStoreCreditAmount());
+                $returnObj->getRefundToStoreCredit());
         }
 
         return $result;
@@ -55,6 +54,7 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
             if (!$order->canCreditmemo()) {
                 $this->_fault('cannot_create_creditmemo');
             }
+            $creditmemoData['order'] = $order;
             $creditmemoData = $this->_prepareCreateData($creditmemoData);
 
             /** @var $service Mage_Sales_Model_Service_Order */
@@ -105,5 +105,35 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
         }
 
         return $result;
+    }
+
+    /**
+     * Set shipping amount to refund to 0 in case it's not passed
+     * Set qtys to refund to 0 by default if they are not passed
+     *
+     * @param  array $data
+     * @return array
+     */
+    protected function _prepareCreateData($data)
+    {
+        $data = parent::_prepareCreateData($data);
+        $qtys = array();
+        if (isset($data['qtys'])) {
+            $qtys = $data['qtys'];
+        }
+        $order = $data['order'];
+        $qtysArray = array();
+        foreach ($order->getAllItems() as $orderItem) {
+            if (!isset($qtys[$orderItem->getId()])) {
+                $qtysArray[$orderItem->getId()] = 0;
+            }
+        }
+        $data['qtys'] = $qtysArray;
+
+        if (empty($data['shipping_amount'])) {
+            $data['shipping_amount'] = 0;
+        }
+
+        return $data;
     }
 }
