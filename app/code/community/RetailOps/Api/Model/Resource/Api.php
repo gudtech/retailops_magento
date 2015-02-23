@@ -54,6 +54,7 @@ class RetailOps_Api_Model_Resource_Api extends Mage_Core_Model_Resource_Db_Abstr
         $select = $this->_getReadAdapter()->select()->from($this->getTable('catalog/product'), array('sku', 'entity_id'));
         $where = sprintf("sku IN ('%s')", implode("','", $productSkus));
         $select->where($where);
+
         return $this->_getReadAdapter()->fetchAll($select);
     }
 
@@ -73,6 +74,7 @@ class RetailOps_Api_Model_Resource_Api extends Mage_Core_Model_Resource_Db_Abstr
                 array('orders.retailops_status')
             )
             ->where('orders.retailops_status = (?)', RetailOps_Api_Helper_Data::RETAILOPS_ORDER_READY);
+
         return $collection;
     }
 }
