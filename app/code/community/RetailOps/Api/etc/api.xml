@@ -25,6 +25,11 @@
                         <method>orderPull</method>
                         <acl>retailops/order_pull</acl>
                     </order_pull>
+                    <inventory_push translate="title" module="retailops_api"><!-- list projects -->
+                        <title>Update product inventory</title>
+                        <method>inventoryPush</method>
+                        <acl>retailops/inventory_push</acl>
+                    </inventory_push>
                 </methods>
                 <faults module="retailops_api"><!-- errors that might appear-->
                 </faults>

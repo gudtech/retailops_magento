@@ -16,7 +16,17 @@ class RetailOps_Api_Model_Api extends Mage_Api_Model_Resource_Abstract
     }
 
     /**
-     * creates Credit Memo
+     * Product Inventory Update
+     *
+     * @param array $itemData
+     * @return array
+     */
+    public function inventoryPush($itemData = null){
+        return Mage::getModel('retailops_api/inventory_api')->inventoryPush($itemData);
+    }
+
+    /**
+     * create Credit Memo
      *
      * @param mixed $returns
      * @return array
@@ -26,7 +36,7 @@ class RetailOps_Api_Model_Api extends Mage_Api_Model_Resource_Abstract
     }
 
     /**
-     * Get Products
+     * Get orders
      *
      * @param mixed $filters
      * @return array
