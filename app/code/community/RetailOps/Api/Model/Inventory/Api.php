@@ -119,7 +119,7 @@ class RetailOps_Api_Model_Inventory_Api extends Mage_CatalogInventory_Model_Stoc
     }
 
     /**
-     * Removes parent order items from collection
+     *
      *
      * @param $data array
      * @return array
@@ -132,11 +132,7 @@ class RetailOps_Api_Model_Inventory_Api extends Mage_CatalogInventory_Model_Stoc
             $skus[] = $item['sku'];
         }
 
-        $records = Mage::getResourceModel('retailops_api/api')->getIdsByProductSkus($skus);
-
-        foreach ($records as $record) {
-            $result[$record['sku']] = $record['entity_id'];
-        }
+        $result = Mage::getResourceModel('retailops_api/api')->getIdsByProductSkus($skus);
 
         return $result;
     }

@@ -12,7 +12,17 @@ class RetailOps_Api_Model_Api extends Mage_Api_Model_Resource_Abstract
      * @return array
      */
     public function catalogPull($filters = null){
-       return Mage::getModel('retailops_api/catalog_api')->catalogPull($filters);
+       return Mage::getModel('retailops_api/catalog_pull_api')->catalogPull($filters);
+    }
+
+    /**
+     * Create/update Products
+     *
+     * @param mixed $filters
+     * @return array
+     */
+    public function catalogPush($filters = null){
+       return Mage::getModel('retailops_api/catalog_push_api')->catalogPush($filters);
     }
 
     /**
@@ -44,5 +54,4 @@ class RetailOps_Api_Model_Api extends Mage_Api_Model_Resource_Abstract
     public function orderPull($filters = null){
         return Mage::getModel('retailops_api/order_api')->orderPull($filters);
     }
-
 }

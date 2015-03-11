@@ -61,4 +61,15 @@ class RetailOps_Api_Helper_Data extends Mage_Api_Helper_Data
 
         return $result;
     }
+
+    /**
+     * Get config value
+     *
+     * @param $path
+     * @return mixed
+     */
+    public function getConfig($path)
+    {
+        return Mage::getStoreConfig('retailops_settings/' . $path);
+    }
 }

@@ -5,7 +5,7 @@
 <config>
     <modules>
         <RetailOps_Api>
-            <version>1.0.0</version>
+            <version>1.0.2</version>
         </RetailOps_Api>
     </modules>
     <global>
@@ -25,6 +25,9 @@
                     <order_status_history>
                         <table>retailops_order_status_history</table>
                     </order_status_history>
+                    <media_import>
+                        <table>retailops_media_import</table>
+                    </media_import>
                 </entities>
             </retailops_api_resource>
         </models>
@@ -64,4 +67,11 @@
     </adminhtml>
     <frontend>
     </frontend>
+    <default>
+        <retailops_settings>
+            <catalog>
+                <multiple_select_options_separator>,</multiple_select_options_separator>
+            </catalog>
+        </retailops_settings>
+    </default>
 </config>
