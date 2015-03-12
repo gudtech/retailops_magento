@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+<!--
+{license_text}
+-->
+<config>
+    <modules>
+        <RetailOps_Api>
+            <version>1.0.2</version>
+        </RetailOps_Api>
+    </modules>
+    <global>
+        <helpers>
+            <retailops_api>
+                <class>RetailOps_Api_Helper</class>
+            </retailops_api>
+        </helpers>
+        <models>
+            <retailops_api>
+                <class>RetailOps_Api_Model</class>
+                <resourceModel>retailops_api_resource</resourceModel>
+            </retailops_api>
+            <retailops_api_resource>
+                <class>RetailOps_Api_Model_Resource</class>
+                <entities>
+                    <order_status_history>
+                        <table>retailops_order_status_history</table>
+                    </order_status_history>
+                    <media_import>
+                        <table>retailops_media_import</table>
+                    </media_import>
+                </entities>
+            </retailops_api_resource>
+        </models>
+        <blocks>
+            <retailops_api>
+                <class>RetailOps_Api_Block</class>
+            </retailops_api>
+        </blocks>
+        <resources>
+            <retailops_api_setup>
+                <setup>
+                    <module>RetailOps_Api</module>
+                    <class>Mage_Core_Model_Resource_Setup</class>
+                </setup>
+            </retailops_api_setup>
+        </resources>
+    </global>
+    <admin>
+        <routers>
+            <adminhtml>
+                <args>
+                    <modules>
+                        <RetailOps_Api after="Mage_Adminhtml">RetailOps_Api_Adminhtml</RetailOps_Api>
+                    </modules>
+                </args>
+            </adminhtml>
+        </routers>
+    </admin>
+    <adminhtml>
+        <layout>
+            <updates>
+                <retailops_api>
+                    <file>retailops.xml</file>
+                </retailops_api>
+            </updates>
+        </layout>
+    </adminhtml>
+    <frontend>
+    </frontend>
+    <crontab>
+        <jobs>
+            <retailops_media_download>
+                <schedule><cron_expr>*/5 * * * *</cron_expr></schedule>
+                <run>
+                    <model>retailops_api/catalog_adapter_media::downloadProductImages</model>
+                </run>
+            </retailops_media_download>
+        </jobs>
+    </crontab>
+    <default>
+        <retailops_settings>
+            <catalog>
+                <media_processing_products_limit>10</media_processing_products_limit>
+            </catalog>
+        </retailops_settings>
+    </default>
+</config>
