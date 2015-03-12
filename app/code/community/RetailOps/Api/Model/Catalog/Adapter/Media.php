@@ -109,7 +109,11 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
         $ioAdapter->open(array('path' => $tmpDirectory));
         if (!$item) {
             $items = Mage::getModel('retailops_api/catalog_media_item')->getCollection();
-            $items->getSelect()->limit(self::CRON_DOWNLOAD_LIMIT);
+            $limit = $this->getHelper()->getConfig('media_processing_products_limit');
+            if (!is_numeric($limit)) {
+                $limit = self::CRON_DOWNLOAD_LIMIT;
+            }
+            $items->getSelect()->limit($limit);
         } else {
             $items = array($item);
         }

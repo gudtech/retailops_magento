@@ -7,11 +7,12 @@ abstract class RetailOps_Api_Model_Catalog_Adapter_Abstract
 {
     protected $_section     = 'general';
     protected $_errorCodes  = array();
-    protected $_adapters    = array();
+    /** @var RetailOps_Api_Model_Catalog_Api */
+    protected $_api;
 
-    public function __construct($adapters = array())
+    public function __construct($api)
     {
-        $this->_adapters = $adapters;
+        $this->_api = $api;
         $this->_construct();
     }
 

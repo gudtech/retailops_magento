@@ -93,7 +93,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Configurable extends RetailOps_Api_Mod
         }
         if (isset($this->_configurableOptions)) {
             /** @var RetailOps_Api_Model_Catalog_Adapter_Attribute $attributesAdapter */
-            $attributesAdapter = $this->_adapters['attributes'];
+            $attributesAdapter = $this->_api->getAdapter('attributes');
             $allOptions =  $attributesAdapter->getAttributeOptions();
             foreach ($this->_configurableOptions as $sku => $configurableAttributes) {
                 try {
@@ -106,7 +106,6 @@ class RetailOps_Api_Model_Catalog_Adapter_Configurable extends RetailOps_Api_Mod
                     $productType->setProduct($configurable);
                     $usedAttributes = array();
                     foreach ($configurableAttributes as $attributeCode => $attribute) {
-                        //TODO: check for configurable attribute
                         $attributeId = $attributesAdapter->findAttribute($attributeCode);
                         if ($attributeId === false) {
                             Mage::throwException(sprintf('Attribute "%" not found', $attributeCode));

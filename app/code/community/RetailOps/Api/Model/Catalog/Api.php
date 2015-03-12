@@ -13,17 +13,42 @@ class RetailOps_Api_Model_Catalog_Api extends Mage_Catalog_Model_Product_Api
     */
     public function __construct()
     {
-        $attributeAdapter = new RetailOps_Api_Model_Catalog_Adapter_Attribute();
         $this->_dataAdapters = array(
-            $attributeAdapter,
-            new RetailOps_Api_Model_Catalog_Adapter_Category(),
-            new RetailOps_Api_Model_Catalog_Adapter_Media(),
-            new RetailOps_Api_Model_Catalog_Adapter_Option(),
-            new RetailOps_Api_Model_Catalog_Adapter_Configurable(array('attributes' => $attributeAdapter)),
-            new RetailOps_Api_Model_Catalog_Adapter_Tag(),
-            new RetailOps_Api_Model_Catalog_Adapter_Default(),
-            new RetailOps_Api_Model_Catalog_Adapter_Link(),
+            'attributes'   => new RetailOps_Api_Model_Catalog_Adapter_Attribute($this),
+            'category'     => new RetailOps_Api_Model_Catalog_Adapter_Category($this),
+            'media'        => new RetailOps_Api_Model_Catalog_Adapter_Media($this),
+            'option'       => new RetailOps_Api_Model_Catalog_Adapter_Option($this),
+            'configurable' => new RetailOps_Api_Model_Catalog_Adapter_Configurable($this),
+            'tag'          => new RetailOps_Api_Model_Catalog_Adapter_Tag($this),
+            'default'      => new RetailOps_Api_Model_Catalog_Adapter_Default($this),
+            'link'         => new RetailOps_Api_Model_Catalog_Adapter_Link($this),
         );
+        Mage::dispatchEvent('retailops_catalog_adapter_init_after', array('api' => $this));
+    }
+
+    /**
+     * @param $code
+     * @return bool
+     */
+    public function getAdapter($code)
+    {
+        if (isset($this->_dataAdapters[$code])) {
+            return $this->_dataAdapters[$code];
+        }
+
+        return false;
+    }
+
+    /**
+     * @param $code
+     * @param $adapter
+     */
+    public function addAdapter($code, $adapter)
+    {
+        if (!($adapter instanceof RetailOps_Api_Model_Catalog_Adapter_Abstract)) {
+             $this->_fault('wrong_data_adapter', 'Wrong data adapter class');
+        }
+        $this->_dataAdapters[$code] = $adapter;
     }
 
     /**

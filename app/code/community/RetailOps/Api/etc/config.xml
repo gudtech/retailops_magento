@@ -67,10 +67,20 @@
     </adminhtml>
     <frontend>
     </frontend>
+    <crontab>
+        <jobs>
+            <retailops_media_download>
+                <schedule><cron_expr>*/5 * * * *</cron_expr></schedule>
+                <run>
+                    <model>retailops_api/catalog_adapter_media::downloadProductImages</model>
+                </run>
+            </retailops_media_download>
+        </jobs>
+    </crontab>
     <default>
         <retailops_settings>
             <catalog>
-                <multiple_select_options_separator>,</multiple_select_options_separator>
+                <media_processing_products_limit>10</media_processing_products_limit>
             </catalog>
         </retailops_settings>
     </default>

@@ -18,5 +18,4 @@ class RetailOps_Api_Model_System_Config_Source_Catalog_AttributeSet
 
         return $this->_options;
     }
-
 }

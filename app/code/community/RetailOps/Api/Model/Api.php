@@ -21,8 +21,8 @@ class RetailOps_Api_Model_Api extends Mage_Api_Model_Resource_Abstract
      * @param mixed $filters
      * @return array
      */
-    public function catalogPush($filters = null){
-       return Mage::getModel('retailops_api/catalog_push_api')->catalogPush($filters);
+    public function catalogPush($productsData){
+       return Mage::getModel('retailops_api/catalog_push_api')->catalogPush($productsData);
     }
 
     /**
@@ -31,7 +31,7 @@ class RetailOps_Api_Model_Api extends Mage_Api_Model_Resource_Abstract
      * @param array $itemData
      * @return array
      */
-    public function inventoryPush($itemData = null){
+    public function inventoryPush($itemData){
         return Mage::getModel('retailops_api/inventory_api')->inventoryPush($itemData);
     }
 
@@ -41,7 +41,7 @@ class RetailOps_Api_Model_Api extends Mage_Api_Model_Resource_Abstract
      * @param mixed $returns
      * @return array
      */
-    public function returnPush($returns = null){
+    public function returnPush($returns){
         return Mage::getModel('retailops_api/return_api')->returnPush($returns);
     }
 

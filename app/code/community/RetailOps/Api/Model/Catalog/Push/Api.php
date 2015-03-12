@@ -103,8 +103,9 @@ class RetailOps_Api_Model_Catalog_Push_Api extends RetailOps_Api_Model_Catalog_A
             /** @var $adapter RetailOps_Api_Model_Catalog_Adapter_Abstract */
             $adapter->processData($data, $product);
         }
+
+        $this->_skuToIdMap[$data['sku']] = $product->getId();
         $product->clearInstance();
-        $this->_skuToIdMap[$data['sku']] = $data['product_id'];
 
         return true;
     }
@@ -138,6 +139,7 @@ class RetailOps_Api_Model_Catalog_Push_Api extends RetailOps_Api_Model_Catalog_A
             $productsData = $productsData['records'];
         }
         $result = array();
+        $result['records'] = array();
         $processedSkus = array();
         try {
             //$this->_stopReindex();
@@ -174,9 +176,9 @@ class RetailOps_Api_Model_Catalog_Push_Api extends RetailOps_Api_Model_Catalog_A
         }
         foreach ($processedSkus as $sku) {
             $r['sku'] = $sku;
-            $r['status'] = 'success';
+            $r['status'] = RetailOps_Api_Helper_Data::API_STATUS_SUCCESS;
             if (!empty($this->_errors[$sku])) {
-                $r['status'] = 'fail';
+                $r['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
                 $r['errors'] = $this->_errors[$sku];
             }
             $result['records'][] = $r;

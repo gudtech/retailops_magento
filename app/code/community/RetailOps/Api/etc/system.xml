@@ -37,14 +37,14 @@
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>
                         </default_attribute_set>
-                        <multiple_select_options_separator>
-                            <label>Separator for multiple select options</label>
+                        <media_processing_products_limit>
+                            <label>Limit to process media data for products by a cron job</label>
                             <frontend_type>text</frontend_type>
                             <sort_order>1</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>
-                        </multiple_select_options_separator>
+                        </media_processing_products_limit>
                     </fields>
                 </catalog>
             </groups>

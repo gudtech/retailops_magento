@@ -5,6 +5,9 @@
 
 class RetailOps_Api_Helper_Data extends Mage_Api_Helper_Data
 {
+    const API_STATUS_SUCCESS = 'success';
+    const API_STATUS_FAIL    = 'fail';
+
     const RETAILOPS_ORDER_PROCESSING    = 'retailops_processing';
     const RETAILOPS_ORDER_COMPLETE      = 'retailops_complete';
     const RETAILOPS_ORDER_READY         = 'retailops_ready';

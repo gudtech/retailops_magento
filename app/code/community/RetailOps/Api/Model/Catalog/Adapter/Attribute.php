@@ -8,6 +8,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
     protected $_section = 'attribute';
 
     protected $_attributeSets;
+    protected $_attributeSetGroups;
     protected $_attributes;
     protected $_simpleAttributes;
     protected $_sourceAttributes;
@@ -15,10 +16,16 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
     protected $_entityTypeId;
     protected $_newOptions = array();
 
+    /*
+     * Attributes to skip while unsetting missing attributes
+     */
+    protected $_systemAttributes = array('has_options', 'required_options', 'media_gallery');
+
     protected function _construct()
     {
         $this->_entityTypeId = Mage::getModel('eav/entity')->setType(Mage_Catalog_Model_Product::ENTITY)->getTypeId();
         $this->_attributeSets = $this->_getAttributeSets();
+        $this->_attributeSetGroups = $this->_getAttributeSetGroups();
         $this->_initAttributes();
         $this->_errorCodes = array(
             'cant_create_attribute_set'      => 101,
@@ -64,6 +71,10 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
         $productData['attribute_set_id'] = $this->_getAttributeSetIdByName($productData['attribute_set']);
         $this->_processStaticAttributes($productData);
         $this->_processAttributes($productData);
+        if ($product->getId() &&
+            (!isset($productData['unset_other_attribute']) || $productData['unset_other_attribute'])) {
+            $this->_unsetOldData($productData, $product);
+        }
     }
 
     /**
@@ -133,6 +144,24 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
         $attributeSetCollection->setEntityTypeFilter($this->_entityTypeId);
 
         return $attributeSetCollection->toOptionHash();
+    }
+
+    /**
+     * @return array
+     */
+    protected function _getAttributeSetGroups()
+    {
+        /** @var $attributeSetCollection Mage_Eav_Model_Resource_Entity_Attribute_Group_Collection */
+        $groupsCollection = Mage::getResourceModel('eav/entity_attribute_group_collection');
+        $groups = array();
+        foreach ($groupsCollection as $group) {
+            if (!isset($groups[$group->getAttributeSetId()])) {
+                $groups[$group->getAttributeSetId()] = array();
+            }
+            $groups[$group->getAttributeSetId()][$group->getAttributeGroupName()] = $group->getId();
+        }
+
+        return $groups;
     }
 
      /**
@@ -262,6 +291,9 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
                     }
                     $attributeGroup = $attributeData['group_name'];
                     $attributeGroupId = null;
+                    if (isset($this->_attributeSetGroups[$attributeSetId][$attributeGroup])) {
+                        $attributeGroupId = $this->_attributeSetGroups[$attributeSetId][$attributeGroup];
+                    }
                     /**
                      * Try to add attribute set group, use the default group if failed
                      */
@@ -292,7 +324,15 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
      */
     public function findAttribute($attributeCode)
     {
-        return array_search($attributeCode, $this->_simpleAttributes + $this->_sourceAttributes);
+        return array_search($attributeCode, $this->_getAttributes());
+    }
+
+    /**
+     * @return mixed
+     */
+    protected function _getAttributes()
+    {
+        return $this->_simpleAttributes + $this->_sourceAttributes;
     }
 
     /**
@@ -301,17 +341,12 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
      */
     protected function _processAttributes(&$productData, $collectOptions = false)
     {
-        $separator = $this->getHelper()->getConfig('multiple_select_options_separator');
         if (isset($productData['attributes'])) {
             foreach ($productData['attributes'] as $attributeData) {
                 $code = $attributeData['attribute_code'];
                 $attributeId = array_search($code, $this->_sourceAttributes);
-                if ($attributeId !== false) {
-                    if ($attributeData['frontend_input'] == 'multiselect') {
-                        $values = explode($separator, $attributeData['value']);
-                    } else {
-                        $values = array($attributeData['value']);
-                    }
+                if ($attributeId !== false && isset($attributeData['value'])) {
+                    $values = (array) $attributeData['value'];
                     if ($collectOptions) {
                         /**
                          * Collect missing options to add
@@ -388,6 +423,30 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
                 $this->_throwException(sprintf('Error saving attribute "%s" options, %s', $attribute->getAttributeCode(),
                     $e->getMessage()), 'error_adding_attribute_options');
             }
+        }
+    }
+
+    /**
+     * Unset attributes which are not passed in the API call
+     *
+     * @param array $productData
+     * @param Mage_Catalog_Model_Product $product
+     */
+    protected function _unsetOldData(array &$productData, $product)
+    {
+        $usedAttributes = array();
+        if (isset($data['attributes'])) {
+            foreach ($data['attributes'] as $attributeData) {
+                $usedAttributes[] = $attributeData['attribute_code'];
+            }
+        }
+        $usedAttributes = array_merge(array_keys($productData), $usedAttributes);
+        $origDataKeys = array_keys($product->getOrigData());
+        $origDataAttributeKeys = array_intersect($origDataKeys, $this->_getAttributes());
+        $keysToUnset = array_diff($origDataAttributeKeys, $usedAttributes, $this->_systemAttributes);
+
+        foreach ($keysToUnset as $key) {
+            $product->setData($key, null);
         }
     }
 }
