@@ -19,6 +19,8 @@ class RetailOps_Api_Model_Catalog_Api extends Mage_Catalog_Model_Product_Api
             'media'        => new RetailOps_Api_Model_Catalog_Adapter_Media($this),
             'option'       => new RetailOps_Api_Model_Catalog_Adapter_Option($this),
             'configurable' => new RetailOps_Api_Model_Catalog_Adapter_Configurable($this),
+            'bundle'       => new RetailOps_Api_Model_Catalog_Adapter_Bundle($this),
+            'downloadable' => new RetailOps_Api_Model_Catalog_Adapter_Downloadable($this),
             'tag'          => new RetailOps_Api_Model_Catalog_Adapter_Tag($this),
             'default'      => new RetailOps_Api_Model_Catalog_Adapter_Default($this),
             'link'         => new RetailOps_Api_Model_Catalog_Adapter_Link($this),

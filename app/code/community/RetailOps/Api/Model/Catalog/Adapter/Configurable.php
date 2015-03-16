@@ -160,13 +160,8 @@ class RetailOps_Api_Model_Catalog_Adapter_Configurable extends RetailOps_Api_Mod
             }
         }
         if ($idsToReindex) {
-            $idsToReindex = array_unique($idsToReindex);
-            $indexerStock = Mage::getModel('cataloginventory/stock_status');
-            foreach ($idsToReindex as $id) {
-                $indexerStock->updateStatus($id, Mage_Catalog_Model_Product_Type_Configurable::TYPE_CODE);
-            }
-            $indexerPrice = Mage::getResourceModel('catalog/product_indexer_price');
-            $indexerPrice->reindexProductIds($idsToReindex);
+            $this->getHelper()->reindexProducts(array_unique($idsToReindex),
+                Mage_Catalog_Model_Product_Type_Configurable::TYPE_CODE);
         }
         if ($failedSkus) {
             $this->_throwException('Configurable data is not saved for ' . implode(',', array_unique($failedSkus)),

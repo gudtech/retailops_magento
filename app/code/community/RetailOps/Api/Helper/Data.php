@@ -75,4 +75,20 @@ class RetailOps_Api_Helper_Data extends Mage_Api_Helper_Data
     {
         return Mage::getStoreConfig('retailops_settings/' . $path);
     }
+
+    /**
+     * Reindex stock and price data for products
+     *
+     * @param $idsToReindex
+     * @param null $type
+     */
+    public function reindexProducts($idsToReindex, $type = null)
+    {
+         $indexerStock = Mage::getModel('cataloginventory/stock_status');
+        foreach ($idsToReindex as $id) {
+            $indexerStock->updateStatus($id, $type);
+        }
+        $indexerPrice = Mage::getResourceModel('catalog/product_indexer_price');
+        $indexerPrice->reindexProductIds($idsToReindex);
+    }
 }

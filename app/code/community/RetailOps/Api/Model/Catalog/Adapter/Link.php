@@ -65,10 +65,8 @@ class RetailOps_Api_Model_Catalog_Adapter_Link extends RetailOps_Api_Model_Catal
                     try {
                         if ($typeId == Mage_Catalog_Model_Product_Link::LINK_TYPE_GROUPED) {
                             $link->getResource()->saveGroupedLinks($product, $links, $typeId);
-                            $indexerStock = Mage::getModel('cataloginventory/stock_status');
-                            $indexerStock->updateStatus($product->getId(), Mage_Catalog_Model_Product_Type_Grouped::TYPE_CODE);
-                            $indexerPrice = Mage::getResourceModel('catalog/product_indexer_price');
-                            $indexerPrice->reindexProductIds($product->getId());
+                            $this->getHelper()->reindexProducts(array($product->getId()),
+                                Mage_Catalog_Model_Product_Type_Grouped::TYPE_CODE);
                         } else {
                             $link->getResource()->saveProductLinks($product, $links, $typeId);
                         }
