@@ -5,6 +5,9 @@
 
 class RetailOps_Api_Helper_Data extends Mage_Api_Helper_Data
 {
+    const API_STATUS_SUCCESS = 'success';
+    const API_STATUS_FAIL    = 'fail';
+
     const RETAILOPS_ORDER_PROCESSING    = 'retailops_processing';
     const RETAILOPS_ORDER_COMPLETE      = 'retailops_complete';
     const RETAILOPS_ORDER_READY         = 'retailops_ready';
@@ -60,5 +63,32 @@ class RetailOps_Api_Helper_Data extends Mage_Api_Helper_Data
         }
 
         return $result;
+    }
+
+    /**
+     * Get config value
+     *
+     * @param $path
+     * @return mixed
+     */
+    public function getConfig($path)
+    {
+        return Mage::getStoreConfig('retailops_settings/' . $path);
+    }
+
+    /**
+     * Reindex stock and price data for products
+     *
+     * @param $idsToReindex
+     * @param null $type
+     */
+    public function reindexProducts($idsToReindex, $type = null)
+    {
+         $indexerStock = Mage::getModel('cataloginventory/stock_status');
+        foreach ($idsToReindex as $id) {
+            $indexerStock->updateStatus($id, $type);
+        }
+        $indexerPrice = Mage::getResourceModel('catalog/product_indexer_price');
+        $indexerPrice->reindexProductIds($idsToReindex);
     }
 }

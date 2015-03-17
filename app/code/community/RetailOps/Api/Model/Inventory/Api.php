@@ -13,7 +13,11 @@ class RetailOps_Api_Model_Inventory_Api extends Mage_CatalogInventory_Model_Stoc
      */
     public function inventoryPush($itemData)
     {
+        if (isset($itemData['records'])) {
+            $itemData = $itemData['records'];
+        }
         $response = array();
+        $response['records'] = array();
         $orderItemsCollection = Mage::getResourceModel('retailops_api/api')->getRetailopsReadyOrderItems();
         $orderItems = $this->filterOrderItems($orderItemsCollection);
         $productIds = $this->getProductIds($itemData);
@@ -44,15 +48,15 @@ class RetailOps_Api_Model_Inventory_Api extends Mage_CatalogInventory_Model_Stoc
                 );
 
                 $this->update($productIds[$itemObj->getSku()], $itemObj->getData());
-                $result['status'] = 'success';
+                $result['status'] = RetailOps_Api_Helper_Data::API_STATUS_SUCCESS;
             } catch (Mage_Core_Exception $e) {
-                $result['status'] = 'failed';
+                $result['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
                 $result['error'] = array(
                     'code'      => $e->getCode(),
                     'message'   => $e->getMessage()
                 );
             }
-            $response[] = $result;
+            $response['records'][] = $result;
         }
 
         return $response;
@@ -119,7 +123,7 @@ class RetailOps_Api_Model_Inventory_Api extends Mage_CatalogInventory_Model_Stoc
     }
 
     /**
-     * Removes parent order items from collection
+     *
      *
      * @param $data array
      * @return array
@@ -132,13 +136,8 @@ class RetailOps_Api_Model_Inventory_Api extends Mage_CatalogInventory_Model_Stoc
             $skus[] = $item['sku'];
         }
 
-        $records = Mage::getResourceModel('retailops_api/api')->getIdsByProductSkus($skus);
-
-        foreach ($records as $record) {
-            $result[$record['sku']] = $record['entity_id'];
-        }
+        $result = Mage::getResourceModel('retailops_api/api')->getIdsByProductSkus($skus);
 
         return $result;
     }
-
 }

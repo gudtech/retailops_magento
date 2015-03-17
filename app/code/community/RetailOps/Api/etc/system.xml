@@ -3,4 +3,52 @@
 {license_text}
 -->
 <config>
+    <tabs>
+        <retailops translate="label" module="retailops_api">
+            <label>RetailOps</label>
+            <sort_order>250</sort_order>
+        </retailops>
+    </tabs>
+    <sections>
+        <retailops_settings translate="label" module="retailops_api">
+            <class>separator-top</class>
+            <label>Settings</label>
+            <tab>retailops</tab>
+            <frontend_type>text</frontend_type>
+            <sort_order>40</sort_order>
+            <show_in_default>1</show_in_default>
+            <show_in_website>1</show_in_website>
+            <show_in_store>1</show_in_store>
+            <groups>
+                <catalog translate="label">
+                    <label>Catalog</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>100</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>0</show_in_website>
+                    <show_in_store>0</show_in_store>
+                    <fields>
+                        <default_attribute_set translate="label">
+                            <label>Default Attribute Set To Extend</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>retailops_api/system_config_source_catalog_attributeSet</source_model>
+                            <sort_order>1</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </default_attribute_set>
+                        <media_processing_products_limit>
+                            <label>Limit to process media data for products by a cron job</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>1</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </media_processing_products_limit>
+                    </fields>
+                </catalog>
+            </groups>
+        </retailops_settings>
+    </sections>
 </config>
+

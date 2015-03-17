@@ -11,9 +11,13 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
      * @param  mixed $returns
      * @return array
      */
-    public function returnPush($returns = null)
+    public function returnPush($returns)
     {
+        if (isset($returns['records'])) {
+            $returns = $returns['records'];
+        }
         $result = array();
+        $result['records'] = array();
         foreach ($returns as $return) {
             $returnObj = new Varien_Object($return);
             Mage::dispatchEvent(
@@ -21,7 +25,7 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
                 array('record' => $returnObj)
             );
 
-            $result[] = $this->create($returnObj->getOrderIncrementId(), $returnObj->getCreditmemoData(),
+            $result['records'][] = $this->create($returnObj->getOrderIncrementId(), $returnObj->getCreditmemoData(),
                 $returnObj->getComment(), $returnObj->getNotifyCustomer(), $returnObj->getIncludeComment(),
                 $returnObj->getRefundToStoreCredit());
         }
@@ -96,10 +100,14 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
                 ->save();
             // send email notification
             $creditmemo->sendEmail($notifyCustomer, ($includeComment ? $comment : ''));
-            $result['increment_id'] = $creditmemo->getIncrementId();
-            $result['status'] = 'success';
+            $result['credit_memo'] = $this->_getAttributes($creditmemo, 'creditmemo');
+            $result['items'] = array();
+            foreach ($creditmemo->getAllItems() as $item) {
+                $result['items'][] = $this->_getAttributes($item, 'creditmemo_item');
+            }
+            $result['status'] = RetailOps_Api_Helper_Data::API_STATUS_SUCCESS;
         } catch (Mage_Core_Exception $e) {
-            $result['status'] = 'failed';
+            $result['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
             $result['message'] = $e->getMessage();
             $result['code'] = $e->getCode();
         }

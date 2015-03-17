@@ -12,7 +12,17 @@ class RetailOps_Api_Model_Api extends Mage_Api_Model_Resource_Abstract
      * @return array
      */
     public function catalogPull($filters = null){
-       return Mage::getModel('retailops_api/catalog_api')->catalogPull($filters);
+       return Mage::getModel('retailops_api/catalog_pull_api')->catalogPull($filters);
+    }
+
+    /**
+     * Create/update Products
+     *
+     * @param mixed $filters
+     * @return array
+     */
+    public function catalogPush($productsData){
+       return Mage::getModel('retailops_api/catalog_push_api')->catalogPush($productsData);
     }
 
     /**
@@ -21,7 +31,7 @@ class RetailOps_Api_Model_Api extends Mage_Api_Model_Resource_Abstract
      * @param array $itemData
      * @return array
      */
-    public function inventoryPush($itemData = null){
+    public function inventoryPush($itemData){
         return Mage::getModel('retailops_api/inventory_api')->inventoryPush($itemData);
     }
 
@@ -31,7 +41,7 @@ class RetailOps_Api_Model_Api extends Mage_Api_Model_Resource_Abstract
      * @param mixed $returns
      * @return array
      */
-    public function returnPush($returns = null){
+    public function returnPush($returns){
         return Mage::getModel('retailops_api/return_api')->returnPush($returns);
     }
 
@@ -44,5 +54,4 @@ class RetailOps_Api_Model_Api extends Mage_Api_Model_Resource_Abstract
     public function orderPull($filters = null){
         return Mage::getModel('retailops_api/order_api')->orderPull($filters);
     }
-
 }

@@ -26,5 +26,4 @@ class RetailOps_Api_Model_Resource_Order_Status_History extends Mage_Sales_Model
     {
         $this->_init('retailops_api/order_status_history', 'entity_id');
     }
-
 }
