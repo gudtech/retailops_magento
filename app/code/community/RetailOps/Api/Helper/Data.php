@@ -5,7 +5,23 @@
 
 class RetailOps_Api_Helper_Data extends Mage_Core_Helper_Abstract
 {
+    const API_STATUS_SUCCESS = 'success';
+    const API_STATUS_FAIL    = 'fail';
+
+    const RETAILOPS_ORDER_PROCESSING    = 'retailops_processing';
+    const RETAILOPS_ORDER_COMPLETE      = 'retailops_complete';
+    const RETAILOPS_ORDER_READY         = 'retailops_ready';
+
     const DEFAULT_LIMIT = 10;
+
+    public function getRetOpsStatuses()
+    {
+        return array(
+            self::RETAILOPS_ORDER_PROCESSING    => 'Processing',
+            self::RETAILOPS_ORDER_COMPLETE      => 'Complete',
+            self::RETAILOPS_ORDER_READY         => 'Ready'
+        );
+    }
 
     /**
      * Apply pager to collection
@@ -47,5 +63,32 @@ class RetailOps_Api_Helper_Data extends Mage_Core_Helper_Abstract
         }
 
         return $result;
+    }
+
+    /**
+     * Get config value
+     *
+     * @param $path
+     * @return mixed
+     */
+    public function getConfig($path)
+    {
+        return Mage::getStoreConfig('retailops_settings/' . $path);
+    }
+
+    /**
+     * Reindex stock and price data for products
+     *
+     * @param $idsToReindex
+     * @param null $type
+     */
+    public function reindexProducts($idsToReindex, $type = null)
+    {
+         $indexerStock = Mage::getModel('cataloginventory/stock_status');
+        foreach ($idsToReindex as $id) {
+            $indexerStock->updateStatus($id, $type);
+        }
+        $indexerPrice = Mage::getResourceModel('catalog/product_indexer_price');
+        $indexerPrice->reindexProductIds($idsToReindex);
     }
 }

@@ -5,6 +5,21 @@
 <config>
     <acl>
         <resources>
+            <admin>
+                <children>
+                    <system>
+                        <children>
+                            <config>
+                                <children>
+                                    <retailops_settings translate="title" module="retailops_api">
+                                        <title>RetailOps Api Settings</title>
+                                    </retailops_settings>
+                                </children>
+                            </config>
+                        </children>
+                    </system>
+                </children>
+            </admin>
         </resources>
     </acl>
 </config>

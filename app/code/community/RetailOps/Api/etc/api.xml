@@ -15,6 +15,26 @@
                         <method>catalogPull</method>
                         <acl>retailops/catalog_pull</acl>
                     </catalog_pull>
+                    <catalog_push translate="title" module="retailops_api"><!-- list projects -->
+                        <title>Create/update products</title>
+                        <method>catalogPush</method>
+                        <acl>retailops/catalog_push</acl>
+                    </catalog_push>
+                    <return_push translate="title" module="retailops_api"><!-- list projects -->
+                        <title>Create Credit Memo</title>
+                        <method>returnPush</method>
+                        <acl>retailops/return_push</acl>
+                    </return_push>
+                    <order_pull translate="title" module="retailops_api">
+                        <title>Retrieve list of orders</title>
+                        <method>orderPull</method>
+                        <acl>retailops/order_pull</acl>
+                    </order_pull>
+                    <inventory_push translate="title" module="retailops_api"><!-- list projects -->
+                        <title>Update product inventory</title>
+                        <method>inventoryPush</method>
+                        <acl>retailops/inventory_push</acl>
+                    </inventory_push>
                     <shipment_push translate="title" module="retailops_api"><!-- list projects -->
                         <title>Create Shipments</title>
                         <method>shipmentPush</method>
@@ -45,6 +65,9 @@
                     <order_update translate="title" module="retailops_api">
                         <title>Order Update</title>
                     </order_update>
+                    <return_push translate="title" module="retailops_api">
+                        <title>Return Push</title>
+                    </return_push>
                     <shipment_push translate="title" module="retailops_api">
                         <title>Shipment Push</title>
                     </shipment_push>
