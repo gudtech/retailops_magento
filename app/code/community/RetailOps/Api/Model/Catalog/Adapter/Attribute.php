@@ -12,6 +12,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
     protected $_attributes;
     protected $_simpleAttributes;
     protected $_sourceAttributes;
+    protected $_multiSelectAttributes = array();
     protected $_attributeOptionCache;
     protected $_entityTypeId;
     protected $_newOptions = array();
@@ -106,12 +107,25 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
         }
 
         foreach ($this->_sourceAttributes as $code) {
-            $value = $product->getData($code);
-            $optionLabel = array_search($value, $this->_attributeOptionCache[$code]);
-            if ($optionLabel) {
-                $data[$code] = $optionLabel;
-            } else {
-                $data[$code] = $value;
+            $values = $product->getData($code);
+            if (array_search($code, $this->_multiSelectAttributes) !== false) {
+                $values = explode(',', $values);
+            }
+            $values = (array) $values;
+            $data[$code] = array();
+            /**
+             * Return array for multiselect options and string for select options
+             */
+            foreach ($values as $value) {
+                $optionLabel = array_search($value, $this->_attributeOptionCache[$code]);
+                if ($optionLabel) {
+                    $data[$code][] = $optionLabel;
+                } else {
+                    $data[$code][] = $value;
+                }
+            }
+            if (count($data[$code]) == 1) {
+                $data[$code] = $data[$code][0];
             }
         }
 
@@ -176,6 +190,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
 
         $this->_sourceAttributes = array();
         $this->_simpleAttributes = array();
+        $this->_multiSelectAttributes = array();
         foreach ($attributeCollection as $attribute) {
             $attributeCode = $attribute->getAttributeCode();
             if ($this->_usesSource($attribute)) {
@@ -188,6 +203,9 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
                         false
                     );
                 $this->_sourceAttributes[$attribute->getId()] = $attributeCode;
+                if ($attribute->getFrontendInput() === 'multiselect') {
+                    $this->_multiSelectAttributes[] = $attribute->getAttributeCode();
+                }
             } else {
                 $this->_simpleAttributes[$attribute->getId()] = $attributeCode;
             }

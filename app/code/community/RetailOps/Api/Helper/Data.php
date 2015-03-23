@@ -3,7 +3,7 @@
 {license_text}
  */
 
-class RetailOps_Api_Helper_Data extends Mage_Core_Helper_Abstract
+class RetailOps_Api_Helper_Data extends Mage_Api_Helper_Data
 {
     const API_STATUS_SUCCESS = 'success';
     const API_STATUS_FAIL    = 'fail';
