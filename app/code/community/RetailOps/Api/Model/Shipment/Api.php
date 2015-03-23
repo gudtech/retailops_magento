@@ -48,9 +48,6 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                         $shipmentResult['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
                         $shipmentResult['message'] = Mage::helper('retailops_api')->__('Can not create shipment');
                     }
-                } catch (Mage_Api_Exception $e) {
-                    $shipmentResult['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
-                    $shipmentResult['message'] = $e->getCustomMessage();
                 } catch (Mage_Core_Exception $e) {
                     $shipmentResult['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
                     $shipmentResult['message'] = $e->getMessage();
@@ -113,20 +110,14 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                                 array('record' => $invoice)
                             );
 
-                            try {
-                                $invoiceIncrementId = $this->_createInvoiceAndCapture(
+                            $invoiceResult = $this->_createInvoiceAndCapture(
                                     $order,
                                     $invoice->getItemsToInvoice(),
                                     $invoice->getComment(),
                                     $invoice->getEmail(),
                                     $invoice->getIncludeComment()
                                 );
-                                $invoiceResult['invoice_increment_id'] = $invoiceIncrementId;
-                                $invoiceResult['status'] = RetailOps_Api_Helper_Data::API_STATUS_SUCCESS;
-                            } catch (Mage_Core_Exception $e) {
-                                $invoiceResult['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
-                                $invoiceResult['message'] = $e->getMessage();
-                            }
+
                             $invoiceResult = array($invoiceResult);
                         }
                     } else {
@@ -196,17 +187,19 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                         }
                     }
                     if ($itemsToCapture) {
-                        $result['invoice_increment_id'] = $this->_createInvoiceAndCapture($order, $itemsToCapture);
+                        $result['invoice_result'] = $this->_createInvoiceAndCapture($order, $itemsToCapture);
                     }
                     if ($itemsToReturn) {
-                        $result['creditmemo'] = $this->_getCreditMemoApi()->create($order, array('qtys' => $itemsToReturn));
+                        $result['creditmemo_result'] = $this->_getCreditMemoApi()->create($order, array('qtys' => $itemsToReturn));
                     }
                     /**
-                     * Cancel rest items if any
+                     * Cancel the rest items if any
                      */
                     $order->registerCancellation(Mage::helper('retailops_api')->__('No more items will be shipped'));
+                    if (isset($orderData['retailops_status'])) {
+                        $order->setRetailopsStatus($orderData['retailops_status']);
+                    }
                     $order->save();
-
                     $result['status'] = RetailOps_Api_Helper_Data::API_STATUS_SUCCESS;
                 }
             } catch (Exception $e) {
@@ -237,33 +230,49 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
      */
     protected function _createInvoiceAndCapture($order, $itemsQty, $comment = null, $email = false, $includeComment = false)
     {
-        $itemsQtyFomratted = array();
-        foreach ($order->getAllItems() as $item) {
-            $itemsQtyFomratted[$item->getId()] = isset($itemsQty[$item->getId()]) ? $itemsQty[$item->getId()] : 0;
+        /** @var $helper RetailOps_Api_Helper_Data */
+        $helper = Mage::helper('retailops_api');
+        try {
+            $itemsQtyFomratted = array();
+            if ($itemsQty) {
+                foreach ($order->getAllItems() as $item) {
+                    $itemsQtyFomratted[$item->getId()] = isset($itemsQty[$item->getId()]) ? $itemsQty[$item->getId()] : 0;
+                }
+            }
+            $invoice = $order->prepareInvoice($itemsQtyFomratted);
+            $invoice->setRequestedCaptureCase(Mage_Sales_Model_Order_Invoice::CAPTURE_ONLINE);
+            $invoice->register();
+
+            if ($comment !== null) {
+                $invoice->addComment($comment, $email);
+            }
+
+            if ($email) {
+                $invoice->setEmailSent(true);
+            }
+
+            $invoice->getOrder()->setIsInProcess(true);
+
+
+            $transactionSave = Mage::getModel('core/resource_transaction')
+                ->addObject($invoice)
+                ->addObject($invoice->getOrder())
+                ->save();
+
+            $invoice->sendEmail($email, ($includeComment ? $comment : ''));
+
+            $result['invoice'] = $helper->removeObjectsFromResult($this->_getAttributes($invoice, 'invoice'));
+            $result['items'] = array();
+            foreach ($invoice->getAllItems() as $item) {
+                $result['items'][] = $helper->removeObjectsFromResult($this->_getAttributes($item, 'invoice_item'));
+            }
+            $result['status'] = RetailOps_Api_Helper_Data::API_STATUS_SUCCESS;
+        } catch (Exception $e) {
+            $result['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
+            $result['message'] = $e->getMessage();
         }
-        $invoice = $order->prepareInvoice($itemsQtyFomratted);
-        $invoice->setRequestedCaptureCase(Mage_Sales_Model_Order_Invoice::CAPTURE_ONLINE);
-        $invoice->register();
 
-        if ($comment !== null) {
-            $invoice->addComment($comment, $email);
-        }
-
-        if ($email) {
-            $invoice->setEmailSent(true);
-        }
-
-        $invoice->getOrder()->setIsInProcess(true);
-
-
-        $transactionSave = Mage::getModel('core/resource_transaction')
-            ->addObject($invoice)
-            ->addObject($invoice->getOrder())
-            ->save();
-
-        $invoice->sendEmail($email, ($includeComment ? $comment : ''));
-
-        return $invoice->getIncrementId();
+        return $result;
     }
 
     /**

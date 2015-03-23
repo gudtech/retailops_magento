@@ -57,6 +57,8 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
     public function create($order, $creditmemoData = null, $comment = null, $notifyCustomer = false,
                            $includeComment = false, $refundToStoreCreditAmount = null)
     {
+        /** @var $helper RetailOps_Api_Helper_Data */
+        $helper = Mage::helper('retailops_api');
         try {
             $result = array();
             if (!$order->getId()) {
@@ -111,10 +113,10 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
                 ->save();
             // send email notification
             $creditmemo->sendEmail($notifyCustomer, ($includeComment ? $comment : ''));
-            $result['credit_memo'] = $this->_getAttributes($creditmemo, 'creditmemo');
+            $result['credit_memo'] = $helper->removeObjectsFromResult($this->_getAttributes($creditmemo, 'creditmemo'));
             $result['items'] = array();
             foreach ($creditmemo->getAllItems() as $item) {
-                $result['items'][] = $this->_getAttributes($item, 'creditmemo_item');
+                $result['items'][] = $helper->removeObjectsFromResult($this->_getAttributes($item, 'creditmemo_item'));
             }
             $result['status'] = RetailOps_Api_Helper_Data::API_STATUS_SUCCESS;
         } catch (Mage_Core_Exception $e) {

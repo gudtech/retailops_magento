@@ -91,4 +91,21 @@ class RetailOps_Api_Helper_Data extends Mage_Api_Helper_Data
         $indexerPrice = Mage::getResourceModel('catalog/product_indexer_price');
         $indexerPrice->reindexProductIds($idsToReindex);
     }
+
+    /**
+     * Remove objects from result array
+     *
+     * @param $data
+     * @return array
+     */
+    public function removeObjectsFromResult($data)
+    {
+        foreach ($data as $key => $value) {
+            if (is_object($value)) {
+                unset($data[$key]);
+            }
+        }
+
+        return $data;
+    }
 }
