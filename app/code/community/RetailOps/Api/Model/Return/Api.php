@@ -6,6 +6,15 @@
 class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_Api
 {
     /**
+     * Initialize attributes mapping
+     */
+    public function __construct()
+    {
+        parent::__construct();
+        $this->_ignoredAttributeCodes['creditmemo'] = array('invoice');
+    }
+
+    /**
      * Creates Credit Memo
      *
      * @param  mixed $returns
@@ -24,8 +33,8 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
                 'retailops_return_push_record',
                 array('record' => $returnObj)
             );
-
-            $result['records'][] = $this->create($returnObj->getOrderIncrementId(), $returnObj->getCreditmemoData(),
+            $order = Mage::getModel('sales/order')->loadByIncrementId($returnObj->getOrderIncrementId());
+            $result['records'][] = $this->create($order, $returnObj->getCreditmemoData(),
                 $returnObj->getComment(), $returnObj->getNotifyCustomer(), $returnObj->getIncludeComment(),
                 $returnObj->getRefundToStoreCredit());
         }
@@ -36,8 +45,8 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
     /**
      * Create new credit memo for order
      *
-     * @param string $orderIncrementId
-     * @param array $creditmemoData array('qtys' => array('sku1' => qty1, ... , 'skuN' => qtyN),
+     * @param Mage_Sales_Model_Order $order
+     * @param array $creditmemoData array('qtys' => array('itemId1' => qty1, ... , 'itemIdN' => qtyN),
      *      'shipping_amount' => value, 'adjustment_positive' => value, 'adjustment_negative' => value)
      * @param string|null $comment
      * @param bool $notifyCustomer
@@ -45,13 +54,11 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
      * @param string $refundToStoreCreditAmount
      * @return string $creditmemoIncrementId
      */
-    public function create($orderIncrementId, $creditmemoData = null, $comment = null, $notifyCustomer = false,
+    public function create($order, $creditmemoData = null, $comment = null, $notifyCustomer = false,
                            $includeComment = false, $refundToStoreCreditAmount = null)
     {
         try {
             $result = array();
-            /** @var $order Mage_Sales_Model_Order */
-            $order = Mage::getModel('sales/order')->load($orderIncrementId, 'increment_id');
             if (!$order->getId()) {
                 $this->_fault('order_not_exists');
             }
@@ -65,7 +72,10 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
             $service = Mage::getModel('sales/service_order', $order);
             /** @var $creditmemo Mage_Sales_Model_Order_Creditmemo */
             $creditmemo = $service->prepareCreditmemo($creditmemoData, $order);
-
+            $invoice = $order->getInvoiceCollection()->getFirstItem();
+            if ($invoice) {
+                $creditmemo->setInvoice($invoice);
+            }
             // refund to Store Credit
             if ($refundToStoreCreditAmount) {
                 // check if refund to Store Credit is available
@@ -87,8 +97,9 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
                     // setting flag to make actual refund to customer balance after credit memo save
                     $creditmemo->setCustomerBalanceRefundFlag(true);
                 }
+                $creditmemo->setPaymentRefundDisallowed(true);
             }
-            $creditmemo->setPaymentRefundDisallowed(true)->register();
+            $creditmemo->register();
             // add comment to creditmemo
             if (!empty($comment)) {
                 $creditmemo->addComment($comment, $notifyCustomer);
@@ -132,9 +143,7 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
         $order = $data['order'];
         $qtysArray = array();
         foreach ($order->getAllItems() as $orderItem) {
-            if (!isset($qtys[$orderItem->getId()])) {
-                $qtysArray[$orderItem->getId()] = 0;
-            }
+            $qtysArray[$orderItem->getId()] = isset($qtys[$orderItem->getId()]) ? $qtys[$orderItem->getId()] : 0;
         }
         $data['qtys'] = $qtysArray;
 

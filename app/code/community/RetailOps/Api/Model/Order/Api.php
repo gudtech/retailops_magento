@@ -146,4 +146,45 @@ class RetailOps_Api_Model_Order_Api extends Mage_Sales_Model_Order_Api
 
         return $result;
     }
+
+    /**
+     * @param array $ordersData
+     * @return array
+     */
+    public function orderStatusUpdate($ordersData)
+    {
+        $fullResult = array();
+        foreach ($ordersData as $orderData) {
+            if (isset($orderData['order_increment_id'])) {
+                try {
+                    $result = array(
+                        'order_increment_id' => $orderData['order_increment_id']
+                    );
+                     /** @var Mage_Sales_Model_Order $order */
+                    $order = Mage::getModel('sales/order');
+                    $order->loadByIncrementId($orderData['order_increment_id']);
+                    if (!$order->getId()) {
+                        throw new Exception('Order is not found');
+                    }
+                    $order->setRetailopsStatus($orderData['retailops_status']);
+                    $order->save();
+                    /** @var RetailOps_Api_Model_Order_Status_History $history */
+                    $history = Mage::getModel('retailops_api/order_status_history');
+                    $history->setOrder($order);
+                    $history->setStatus($orderData['retailops_status']);
+                    if (isset($orderData['comment'])) {
+                        $history->setComment($orderData['comment']);
+                    }
+                    $history->save();
+                    $result['status'] = RetailOps_Api_Helper_Data::API_STATUS_SUCCESS;
+                } catch (Exception $e) {
+                    $result['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
+                    $result['message'] = $e->getMessage();
+                }
+                $fullResult[] = $result;
+            }
+        }
+
+        return $fullResult;
+    }
 }

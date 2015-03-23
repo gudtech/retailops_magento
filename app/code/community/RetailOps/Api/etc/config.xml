@@ -44,6 +44,16 @@
                 </setup>
             </retailops_api_setup>
         </resources>
+        <events>
+            <sales_order_payment_place_end>
+                <observers>
+                    <update_retailops_status>
+                        <class>retailops_api/observer</class>
+                        <method>updateRetailopsStatus</method>
+                    </update_retailops_status>
+                </observers>
+            </sales_order_payment_place_end>
+        </events>
     </global>
     <admin>
         <routers>

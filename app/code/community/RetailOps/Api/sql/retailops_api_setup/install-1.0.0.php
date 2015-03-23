@@ -13,7 +13,6 @@ $installer->getConnection()
         array(
             'type'      => Varien_Db_Ddl_Table::TYPE_TEXT,
             'length'    => 255,
-            'default'   => RetailOps_Api_Helper_Data::RETAILOPS_ORDER_PROCESSING,
             'comment'   => 'RetailOps Order Status'
             ));
 $installer->getConnection()

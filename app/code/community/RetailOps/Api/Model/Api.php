@@ -18,7 +18,7 @@ class RetailOps_Api_Model_Api extends Mage_Api_Model_Resource_Abstract
     /**
      * Create/update Products
      *
-     * @param mixed $filters
+     * @param mixed $productsData
      * @return array
      */
     public function catalogPush($productsData){
@@ -56,12 +56,32 @@ class RetailOps_Api_Model_Api extends Mage_Api_Model_Resource_Abstract
     }
 
     /**
-     * Get Products
+     * Update retailops order status
+     *
+     * @param $ordersData
+     * @return mixed
+     */
+    public function orderStatusUpdate($ordersData){
+        return Mage::getModel('retailops_api/order_api')->orderStatusUpdate($ordersData);
+    }
+
+    /**
+     * Create shipments
      *
      * @param mixed $shipments
      * @return array
      */
-    public function shipmentPush($shipments = null){
+    public function shipmentPush($shipments){
         return Mage::getModel('retailops_api/shipment_api')->shipmentPush($shipments);
+    }
+
+    /**
+     * Close order
+     *
+     * @param $ordersData
+     * @return mixed
+     */
+    public function orderClose($ordersData){
+        return Mage::getModel('retailops_api/shipment_api')->orderClose($ordersData);
     }
 }
