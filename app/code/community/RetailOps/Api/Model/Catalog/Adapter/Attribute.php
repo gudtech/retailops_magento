@@ -1,6 +1,26 @@
 <?php
 /**
-{license_text}
+The MIT License (MIT)
+
+Copyright (c) 2015 Gud Technologies Incorporated (RetailOps by GüdTech)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
  */
 
 class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_Catalog_Adapter_Abstract
@@ -12,6 +32,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
     protected $_attributes;
     protected $_simpleAttributes;
     protected $_sourceAttributes;
+    protected $_multiSelectAttributes = array();
     protected $_attributeOptionCache;
     protected $_entityTypeId;
     protected $_newOptions = array();
@@ -106,12 +127,25 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
         }
 
         foreach ($this->_sourceAttributes as $code) {
-            $value = $product->getData($code);
-            $optionLabel = array_search($value, $this->_attributeOptionCache[$code]);
-            if ($optionLabel) {
-                $data[$code] = $optionLabel;
-            } else {
-                $data[$code] = $value;
+            $values = $product->getData($code);
+            if (array_search($code, $this->_multiSelectAttributes) !== false) {
+                $values = explode(',', $values);
+            }
+            $values = (array) $values;
+            $data[$code] = array();
+            /**
+             * Return array for multiselect options and string for select options
+             */
+            foreach ($values as $value) {
+                $optionLabel = array_search($value, $this->_attributeOptionCache[$code]);
+                if ($optionLabel) {
+                    $data[$code][] = $optionLabel;
+                } else {
+                    $data[$code][] = $value;
+                }
+            }
+            if (count($data[$code]) == 1) {
+                $data[$code] = $data[$code][0];
             }
         }
 
@@ -176,6 +210,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
 
         $this->_sourceAttributes = array();
         $this->_simpleAttributes = array();
+        $this->_multiSelectAttributes = array();
         foreach ($attributeCollection as $attribute) {
             $attributeCode = $attribute->getAttributeCode();
             if ($this->_usesSource($attribute)) {
@@ -188,6 +223,9 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
                         false
                     );
                 $this->_sourceAttributes[$attribute->getId()] = $attributeCode;
+                if ($attribute->getFrontendInput() === 'multiselect') {
+                    $this->_multiSelectAttributes[] = $attribute->getAttributeCode();
+                }
             } else {
                 $this->_simpleAttributes[$attribute->getId()] = $attributeCode;
             }

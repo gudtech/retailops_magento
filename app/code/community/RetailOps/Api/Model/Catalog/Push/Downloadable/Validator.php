@@ -23,14 +23,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
  */
 
-class RetailOps_Api_Model_Observer
+class RetailOps_Api_Model_Catalog_Push_Downloadable_Validator extends Mage_Downloadable_Model_Link_Api_Validator
 {
     /**
-     * @param $observer
+     * Remove base64 file contents validation
+     *
+     * @param mixed $var
      */
-    public function updateRetailopsStatus($observer)
+    public function validateFileDetails(&$var)
     {
-        $order = $observer->getEvent()->getPayment()->getOrder();
-        $order->setRetailopsStatus(RetailOps_Api_Helper_Data::RETAILOPS_ORDER_READY);
     }
 }
