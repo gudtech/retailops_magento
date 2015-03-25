@@ -115,6 +115,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Bundle extends RetailOps_Api_Model_Cat
                     $bundle->save();
                     $idsToReindex[] = $bundle->getId();
                     $bundle->clearInstance();
+                    Mage::unregister('product');
                 } catch (Exception $e) {
                     $failedSkus[] = $sku;
                 }
