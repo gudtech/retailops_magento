@@ -255,9 +255,9 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
             $attributeSetId = $this->_getAttributeSetIdByName($attributeSet);
             if ($attributeSetId === false) {
                 try {
-                    $attributeSetId = $this->_createAttributeSet($attributeSet);
+                    $attributeSetId = $this->_createAttributeSet($attributeSet, $data['sku']);
                 } catch (Mage_Api_Exception $e) {
-                    $this->_throwException($e->getCustomMessage(), 'cant_create_attribute_set');
+                    $this->_throwException($e->getCustomMessage(), 'cant_create_attribute_set', $data['sku']);
                 }
                 $this->_attributeSets[$attributeSetId] = $attributeSet;
             }
@@ -272,11 +272,11 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
      * @param $name
      * @return mixed
      */
-    protected function _createAttributeSet($name)
+    protected function _createAttributeSet($name, $sku)
     {
         $defaultAttributeSetId = $this->getHelper()->getConfig('catalog/default_attribute_set');
         if (!$defaultAttributeSetId) {
-            $this->_throwException('Default attribute set is not set', 'default_attribute_set_not_set');
+            $this->_throwException('Default attribute set is not set', 'default_attribute_set_not_set', $sku);
         }
 
         $attributeSetId = $this->_getProductAttributeSetApi()->create($name, $defaultAttributeSetId);

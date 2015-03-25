@@ -195,6 +195,7 @@ class RetailOps_Api_Model_Catalog_Push_Api extends RetailOps_Api_Model_Catalog_A
             $this->_addError(new RetailOps_Api_Model_Catalog_Exception($e->getMessage()));
         }
         foreach ($processedSkus as $sku) {
+            $r = array();
             $r['sku'] = $sku;
             $r['status'] = RetailOps_Api_Helper_Data::API_STATUS_SUCCESS;
             if (!empty($this->_errors[$sku])) {
