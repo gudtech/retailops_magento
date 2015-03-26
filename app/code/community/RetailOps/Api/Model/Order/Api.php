@@ -173,6 +173,9 @@ class RetailOps_Api_Model_Order_Api extends Mage_Sales_Model_Order_Api
      */
     public function orderStatusUpdate($ordersData)
     {
+        if (isset($ordersData['records'])) {
+            $ordersData = $ordersData['records'];
+        }
         $fullResult = array();
         foreach ($ordersData as $orderData) {
             if (isset($orderData['order_increment_id'])) {
