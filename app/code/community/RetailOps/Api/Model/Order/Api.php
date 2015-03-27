@@ -80,8 +80,7 @@ class RetailOps_Api_Model_Order_Api extends Mage_Sales_Model_Order_Api
             array('collection' => $orderCollection)
         );
 
-        $result['totalCount'] = $orderCollection->getSize();
-        $result['count'] = count($orderCollection);
+
 
         /** @var $apiHelper Retailops_Api_Helper_Data */
         $apiHelper = Mage::helper('retailops_api');
@@ -95,6 +94,9 @@ class RetailOps_Api_Model_Order_Api extends Mage_Sales_Model_Order_Api
         } catch (Mage_Core_Exception $e) {
             $this->_fault('filters_invalid', $e->getMessage());
         }
+
+        $result['totalCount'] = $orderCollection->getSize();
+        $result['count'] = count($orderCollection);
 
         try {
             foreach ($orderCollection as $order) {
