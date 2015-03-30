@@ -26,11 +26,22 @@ THE SOFTWARE.
 class RetailOps_Api_Model_Observer
 {
     /**
+     * Update retailops order status when payment is made
+     *
      * @param $observer
      */
     public function updateRetailopsStatus($observer)
     {
         $order = $observer->getEvent()->getPayment()->getOrder();
         $order->setRetailopsStatus(RetailOps_Api_Helper_Data::RETAILOPS_ORDER_READY);
+    }
+
+    /**
+     * Download product images
+     */
+    public function downloadProductImages()
+    {
+        $mediaAdapter = new RetailOps_Api_Model_Catalog_Adapter_Media();
+        $mediaAdapter->downloadProductImages();
     }
 }
