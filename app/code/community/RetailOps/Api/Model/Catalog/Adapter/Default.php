@@ -30,7 +30,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Default extends RetailOps_Api_Model_Ca
     /** @var array */
     protected $_productTypes;
 
-    public function _construct()
+    protected function _construct()
     {
         $this->_productTypes = array_keys(Mage::getModel('catalog/product_type')->getOptionArray());
         $this->_errorCodes = array(

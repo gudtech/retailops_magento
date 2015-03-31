@@ -30,7 +30,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Configurable extends RetailOps_Api_Mod
     protected $_associations        = array();
     protected $_configurableOptions = array();
 
-    public function _construct()
+    protected function _construct()
     {
         $this->_errorCodes = array(
             'cant_save_configurable_data' => 301,
