@@ -179,6 +179,7 @@ class RetailOps_Api_Model_Order_Api extends Mage_Sales_Model_Order_Api
             $ordersData = $ordersData['records'];
         }
         $fullResult = array();
+        $fullResult['records'] = array();
         foreach ($ordersData as $orderData) {
             if (isset($orderData['order_increment_id'])) {
                 try {
@@ -206,7 +207,7 @@ class RetailOps_Api_Model_Order_Api extends Mage_Sales_Model_Order_Api
                     $result['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
                     $result['message'] = $e->getMessage();
                 }
-                $fullResult[] = $result;
+                $fullResult['records'][] = $result;
             }
         }
 
