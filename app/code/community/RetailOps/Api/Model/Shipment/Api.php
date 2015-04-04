@@ -35,6 +35,9 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
     {
         $fullResult = array();
         $fullResult['records'] = array();
+        if (isset($shipments['records'])) {
+            $shipments = $shipments['records'];
+        }
         foreach ($shipments as $shipmentData) {
             $result = array();
             try{
@@ -169,6 +172,9 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
     {
         $fullResult = array();
         $fullResult['records'] = array();
+        if (isset($ordersData['records'])) {
+            $ordersData = $ordersData['records'];
+        }
         foreach ($ordersData as $orderData) {
             try {
                 if (!empty($orderData['order_increment_id'])) {
