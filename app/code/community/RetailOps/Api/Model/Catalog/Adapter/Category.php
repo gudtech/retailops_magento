@@ -89,6 +89,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Category extends RetailOps_Api_Model_C
                             $this->_wereProcessed[] = $index;
                         }
                         if (!empty($categoryData['link'])) {
+                            $categoryId = $this->_categories[$index];
                             $assignedCategories[] = $categoryId;
                         }
                     } catch (Mage_Api_Exception $e) {

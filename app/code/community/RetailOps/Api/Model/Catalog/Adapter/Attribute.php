@@ -418,6 +418,8 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
                         }
                         $productData[$code] = $valuesIds;
                     }
+                } elseif (isset($attributeData['value'])) {
+                    $productData[$code] = $attributeData['value'];
                 }
             }
         }

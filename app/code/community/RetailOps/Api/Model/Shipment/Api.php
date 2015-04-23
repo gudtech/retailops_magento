@@ -74,7 +74,7 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                     }
                 } catch (Mage_Core_Exception $e) {
                     $shipmentResult['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
-                    $shipmentResult['message'] = $e->getMessage();
+                    $shipmentResult['message'] = $e->getCustomMessage() ? $e->getCustomMessage() : $e->getMessage();
                 }
 
                 $result['shipment_result'] = $shipmentResult;
