@@ -134,6 +134,14 @@ class RetailOps_Api_Model_Catalog_Adapter_Configurable extends RetailOps_Api_Mod
                         if ($attributeId === false) {
                             Mage::throwException(sprintf('Attribute "%s" not found', $attributeCode));
                         }
+                        /** @var Mage_Catalog_Model_Resource_Eav_Attribute $attribute */
+                        $attribute = Mage::getResourceModel('catalog/eav_attribute')->load($attributeId);
+                        $isInSet = Mage::getResourceModel('eav/entity_attribute_set')->getSetInfo(array($attributeId),
+                            $configurable->getAttributeSetId());
+                        if (!$isInSet[$attributeId]
+                            || !$productType->canUseAttribute($attribute)) {
+                            Mage::throwException(sprintf('Attribute "%s" is not assigned to attribute set or cannot be used for configurable products', $attributeCode));
+                        }
                         $usedAttributes[] = $attributeId;
                     }
                     $configurableAttributesData = $productType->getConfigurableAttributesAsArray();
