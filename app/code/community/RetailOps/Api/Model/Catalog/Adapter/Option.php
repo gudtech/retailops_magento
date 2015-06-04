@@ -28,7 +28,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Option extends RetailOps_Api_Model_Cat
     protected $_section     = 'custom_options';
     protected $_optionTypes = array();
 
-    public function _construct()
+    protected function _construct()
     {
         $this->_optionTypes = $this->_getOptionTypes();
         $this->_errorCodes = array(

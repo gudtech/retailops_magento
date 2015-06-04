@@ -113,6 +113,7 @@ class RetailOps_Api_Model_Catalog_Push_Api extends RetailOps_Api_Model_Catalog_A
      */
     public function processData(array &$data)
     {
+        /** @var Mage_Catalog_Model_Product $product */
         $product = Mage::getModel('catalog/product');
         if (isset($this->_skuToIdMap[$data['sku']])) {
             $data['product_id'] = $this->_skuToIdMap[$data['sku']];
@@ -125,6 +126,12 @@ class RetailOps_Api_Model_Catalog_Push_Api extends RetailOps_Api_Model_Catalog_A
         }
 
         $this->_skuToIdMap[$data['sku']] = $product->getId();
+        if ($product->getHasOptions()) {
+            /**
+             * Clear custom options singleton
+             */
+            $product->getOptionInstance()->unsetOptions();
+        }
         $product->clearInstance();
 
         return true;
@@ -195,6 +202,7 @@ class RetailOps_Api_Model_Catalog_Push_Api extends RetailOps_Api_Model_Catalog_A
             $this->_addError(new RetailOps_Api_Model_Catalog_Exception($e->getMessage()));
         }
         foreach ($processedSkus as $sku) {
+            $r = array();
             $r['sku'] = $sku;
             $r['status'] = RetailOps_Api_Helper_Data::API_STATUS_SUCCESS;
             if (!empty($this->_errors[$sku])) {

@@ -40,7 +40,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
     protected $_mediaDataToSave = array();
     protected $_straightMediaProcessing = false;
 
-    public function _construct()
+    protected function _construct()
     {
         $this->_errorCodes = array(
             'no_media_attribute'   => 801,

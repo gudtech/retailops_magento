@@ -102,7 +102,7 @@ THE SOFTWARE.
             <retailops_media_download>
                 <schedule><cron_expr>*/5 * * * *</cron_expr></schedule>
                 <run>
-                    <model>retailops_api/catalog_adapter_media::downloadProductImages</model>
+                    <model>retailops_api/observer::downloadProductImages</model>
                 </run>
             </retailops_media_download>
         </jobs>

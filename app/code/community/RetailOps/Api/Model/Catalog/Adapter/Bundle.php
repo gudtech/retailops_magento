@@ -29,7 +29,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Bundle extends RetailOps_Api_Model_Cat
 
     protected $_bundleOptions = array();
 
-    public function _construct()
+    protected function _construct()
     {
         $this->_errorCodes = array(
             'cant_save_bundle_data' => '801'
@@ -115,6 +115,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Bundle extends RetailOps_Api_Model_Cat
                     $bundle->save();
                     $idsToReindex[] = $bundle->getId();
                     $bundle->clearInstance();
+                    Mage::unregister('product');
                 } catch (Exception $e) {
                     $failedSkus[] = $sku;
                 }

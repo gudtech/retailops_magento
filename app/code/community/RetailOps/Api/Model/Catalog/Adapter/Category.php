@@ -26,9 +26,15 @@ THE SOFTWARE.
 class RetailOps_Api_Model_Catalog_Adapter_Category extends RetailOps_Api_Model_Catalog_Adapter_Abstract
 {
     protected $_categories;
+    /**
+     * Array of already processed category indexes to avoid double save
+     * @var array
+     */
+    protected $_wereProcessed = array();
+
     protected $_section = 'category';
 
-    public function _construct()
+    protected function _construct()
     {
         $this->_initCategories();
         $this->_errorCodes = array(
@@ -55,32 +61,35 @@ class RetailOps_Api_Model_Catalog_Adapter_Category extends RetailOps_Api_Model_C
                         $parentCategoryPath = $categoryPath;
                         $categoryPath[] = $categoryData['name'];
                         $index = $this->_getCategoryPathIndex($categoryPath);
-                        if (!isset($this->_categories[$index])) {
-                            $parentIndex = $this->_getCategoryPathIndex($parentCategoryPath);
-                            $parentId = isset($this->_categories[$parentIndex]) ? $this->_categories[$parentIndex] : 1;
+                        if (!in_array($index, $this->_wereProcessed)) {
+                            if (!isset($this->_categories[$index])) {
+                                $parentIndex = $this->_getCategoryPathIndex($parentCategoryPath);
+                                $parentId = isset($this->_categories[$parentIndex]) ? $this->_categories[$parentIndex] : 1;
 
-                            Mage::dispatchEvent('retailops_catalog_category_create_before',
-                                array('category_data' => $data));
+                                Mage::dispatchEvent('retailops_catalog_category_create_before',
+                                    array('category_data' => $data));
 
-                            $categoryId = $categoryApi->create($parentId, $data->getData());
-                            $this->_categories[$index] = $categoryId;
+                                $categoryId = $categoryApi->create($parentId, $data->getData());
+                                $this->_categories[$index] = $categoryId;
 
-                            Mage::dispatchEvent('retailops_catalog_category_create_after',
-                                array('category_id' => $categoryId, 'category_data' => $data));
+                                Mage::dispatchEvent('retailops_catalog_category_create_after',
+                                    array('category_id' => $categoryId, 'category_data' => $data));
 
-                        } else {
-                            $categoryId = $this->_categories[$index];
+                            } else {
+                                $categoryId = $this->_categories[$index];
 
-                            Mage::dispatchEvent('retailops_catalog_category_update_before',
-                                array('category_id' => $categoryId, 'category_data' => $data));
+                                Mage::dispatchEvent('retailops_catalog_category_update_before',
+                                    array('category_id' => $categoryId, 'category_data' => $data));
 
-                            $categoryApi->update($categoryId, $data->getData());
+                                $categoryApi->update($categoryId, $data->getData());
 
-                            Mage::dispatchEvent('retailops_catalog_category_update_after',
-                                array('category_id' => $categoryId, 'category_data' => $data));
+                                Mage::dispatchEvent('retailops_catalog_category_update_after',
+                                    array('category_id' => $categoryId, 'category_data' => $data));
+                            }
+                            $this->_wereProcessed[] = $index;
                         }
-
                         if (!empty($categoryData['link'])) {
+                            $categoryId = $this->_categories[$index];
                             $assignedCategories[] = $categoryId;
                         }
                     } catch (Mage_Api_Exception $e) {
