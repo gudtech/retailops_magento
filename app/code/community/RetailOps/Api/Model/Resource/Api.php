@@ -73,7 +73,7 @@ class RetailOps_Api_Model_Resource_Api extends Mage_Core_Model_Resource_Db_Abstr
             $select->where("sku IN (?)", $productSkus);
         }
 
-        return $this->_getReadAdapter()->fetchPairs($select, $binds);
+        return $this->_getReadAdapter()->fetchPairs($select);
     }
 
     /**
