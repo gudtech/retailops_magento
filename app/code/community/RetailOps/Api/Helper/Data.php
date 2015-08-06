@@ -31,6 +31,7 @@ class RetailOps_Api_Helper_Data extends Mage_Api_Helper_Data
     const RETAILOPS_ORDER_PROCESSING    = 'retailops_processing';
     const RETAILOPS_ORDER_COMPLETE      = 'retailops_complete';
     const RETAILOPS_ORDER_READY         = 'retailops_ready';
+    const RETAILOPS_ORDER_HOLD          = 'retailops_hold';
 
     const DEFAULT_LIMIT = 10;
 
@@ -39,7 +40,8 @@ class RetailOps_Api_Helper_Data extends Mage_Api_Helper_Data
         return array(
             self::RETAILOPS_ORDER_PROCESSING    => 'Processing',
             self::RETAILOPS_ORDER_COMPLETE      => 'Complete',
-            self::RETAILOPS_ORDER_READY         => 'Ready'
+            self::RETAILOPS_ORDER_READY         => 'Ready',
+            self::RETAILOPS_ORDER_HOLD          => 'Hold'
         );
     }
 

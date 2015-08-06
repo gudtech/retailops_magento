@@ -82,7 +82,7 @@ class RetailOps_Api_Model_Resource_Api extends Mage_Core_Model_Resource_Db_Abstr
      *
      * @return Mage_Sales_Order_Item_Collection
      */
-    public function getRetailopsReadyOrderItems()
+    public function getRetailopsNonretrievedOrderItems()
     {
         $collection = Mage::getModel('sales/order_item')->getCollection();
 
@@ -92,7 +92,7 @@ class RetailOps_Api_Model_Resource_Api extends Mage_Core_Model_Resource_Db_Abstr
                 'orders.entity_id = main_table.order_id',
                 array('orders.retailops_status')
             )
-            ->where('orders.retailops_status = (?)', RetailOps_Api_Helper_Data::RETAILOPS_ORDER_READY);
+            ->where('orders.retailops_status IN (?)', array( RetailOps_Api_Helper_Data::RETAILOPS_ORDER_HOLD, RetailOps_Api_Helper_Data::RETAILOPS_ORDER_READY ));
 
         return $collection;
     }

@@ -38,7 +38,7 @@ class RetailOps_Api_Model_Inventory_Api extends Mage_CatalogInventory_Model_Stoc
         }
         $response = array();
         $response['records'] = array();
-        $orderItemsCollection = Mage::getResourceModel('retailops_api/api')->getRetailopsReadyOrderItems();
+        $orderItemsCollection = Mage::getResourceModel('retailops_api/api')->getRetailopsNonretrievedOrderItems();
         $orderItems = $this->filterOrderItems($orderItemsCollection);
         $productIds = $this->getProductIds($itemData);
 
