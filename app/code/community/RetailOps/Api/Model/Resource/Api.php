@@ -70,11 +70,16 @@ class RetailOps_Api_Model_Resource_Api extends Mage_Core_Model_Resource_Db_Abstr
     {
         $select = $this->_getReadAdapter()->select()->from($this->getTable('catalog/product'), array('sku', 'entity_id'));
         if ($productSkus) {
-            $where = sprintf("sku IN ('%s')", implode("','", $productSkus));
+            $count = 0;
+            $binds = array_reduce($productSkus, function($result, $item) use (&$count) {
+                $result['s' . $count++] = $item;
+                return $result;
+            });
+            $where = sprintf("sku IN (:%s)", implode(",:", array_keys($binds)));
             $select->where($where);
         }
 
-        return $this->_getReadAdapter()->fetchPairs($select);
+        return $this->_getReadAdapter()->fetchPairs($select, $binds);
     }
 
     /**
