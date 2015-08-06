@@ -33,9 +33,13 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
      */
     public function shipmentPush($shipments)
     {
-        $result = array();
-        $count = 0;
+        $fullResult = array();
+        $fullResult['records'] = array();
+        if (isset($shipments['records'])) {
+            $shipments = $shipments['records'];
+        }
         foreach ($shipments as $shipmentData) {
+            $result = array();
             try{
                 $shipment = new Varien_Object($shipmentData);
 
@@ -44,7 +48,7 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                     array('record' => $shipment)
                 );
 
-                $result[$count]['order_increment_id'] = $shipment->getOrderIncrementId();
+                $result['order_increment_id'] = $shipment->getOrderIncrementId();
 
                 $orderIncrementId = $shipment->getOrderIncrementId();
                 $shipmentInfo = $shipment->getShipment();
@@ -70,13 +74,13 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                     }
                 } catch (Mage_Core_Exception $e) {
                     $shipmentResult['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
-                    $shipmentResult['message'] = $e->getMessage();
+                    $shipmentResult['message'] = $e->getCustomMessage() ? $e->getCustomMessage() : $e->getMessage();
                 }
 
-                $result[$count]['shipment_result'] = $shipmentResult;
+                $result['shipment_result'] = $shipmentResult;
                 if ($shipmentIncrementId) {
                     if ($trackInfo) {
-                        $result[$count]['track_result'] = array();
+                        $result['track_result'] = array();
                         foreach ($trackInfo as $track) {
                             // add shipment track
                             try {
@@ -101,7 +105,7 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                                 $trackResult['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
                                 $trackResult['message'] = $e->getMessage();
                             }
-                            $result[$count]['track_result'][] = $trackResult;
+                            $result['track_result'][] = $trackResult;
                         }
                     }
 
@@ -148,17 +152,16 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                             $invoiceResult = $this->_captureInvoices($invoices);
                         }
                     }
-                    $result[$count]['invoice_result'] = $invoiceResult;
+                    $result['invoice_result'] = $invoiceResult;
                 }
             } catch (Exception $e) {
-                $result[$count]['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
-                $result[$count]['message'] = $e->getMessage();
+                $result['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
+                $result['message'] = $e->getMessage();
             }
-
-            $count++;
+            $fullResult['records'][] = $result;
         }
 
-        return $result;
+        return $fullResult;
     }
 
     /**
@@ -168,6 +171,10 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
     public function orderClose($ordersData)
     {
         $fullResult = array();
+        $fullResult['records'] = array();
+        if (isset($ordersData['records'])) {
+            $ordersData = $ordersData['records'];
+        }
         foreach ($ordersData as $orderData) {
             try {
                 if (!empty($orderData['order_increment_id'])) {
@@ -226,7 +233,7 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                 $result['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
                 $result['message'] = $e->getMessage();
             }
-            $fullResult[] = $result;
+            $fullResult['records'][] = $result;
         }
 
         return $fullResult;

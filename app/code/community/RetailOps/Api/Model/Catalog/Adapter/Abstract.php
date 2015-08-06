@@ -30,7 +30,7 @@ abstract class RetailOps_Api_Model_Catalog_Adapter_Abstract
     /** @var RetailOps_Api_Model_Catalog_Api */
     protected $_api;
 
-    public function __construct($api)
+    public function __construct($api = null)
     {
         $this->_api = $api;
         $this->_construct();

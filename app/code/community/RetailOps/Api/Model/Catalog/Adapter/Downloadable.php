@@ -29,7 +29,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Downloadable extends RetailOps_Api_Mod
 
     protected $_downloadableData = array();
 
-    public function _construct()
+    protected function _construct()
     {
         $this->_errorCodes = array(
             'cant_save_downloadable_data' => '901'

@@ -36,6 +36,12 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
     protected $_attributeOptionCache;
     protected $_entityTypeId;
     protected $_newOptions = array();
+    /**
+     * Array of already processed attribute codes to avoid double save
+     * @var array
+     */
+    protected $_wereProcessed = array();
+
 
     /*
      * Attributes to skip while unsetting missing attributes
@@ -255,9 +261,9 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
             $attributeSetId = $this->_getAttributeSetIdByName($attributeSet);
             if ($attributeSetId === false) {
                 try {
-                    $attributeSetId = $this->_createAttributeSet($attributeSet);
+                    $attributeSetId = $this->_createAttributeSet($attributeSet, $data['sku']);
                 } catch (Mage_Api_Exception $e) {
-                    $this->_throwException($e->getCustomMessage(), 'cant_create_attribute_set');
+                    $this->_throwException($e->getCustomMessage(), 'cant_create_attribute_set', $data['sku']);
                 }
                 $this->_attributeSets[$attributeSetId] = $attributeSet;
             }
@@ -272,11 +278,11 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
      * @param $name
      * @return mixed
      */
-    protected function _createAttributeSet($name)
+    protected function _createAttributeSet($name, $sku)
     {
         $defaultAttributeSetId = $this->getHelper()->getConfig('catalog/default_attribute_set');
         if (!$defaultAttributeSetId) {
-            $this->_throwException('Default attribute set is not set', 'default_attribute_set_not_set');
+            $this->_throwException('Default attribute set is not set', 'default_attribute_set_not_set', $sku);
         }
 
         $attributeSetId = $this->_getProductAttributeSetApi()->create($name, $defaultAttributeSetId);
@@ -308,24 +314,28 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
                 try {
                     $attribute = new Varien_Object($attributeData);
                     $attributeId = $this->findAttribute($attributeData['attribute_code']);
-
-                    if ($attributeId !== false) {
-                        Mage::dispatchEvent('retailops_catalog_attribute_update_before',
-                            array('attribute_data' => $attribute));
-                        $attributeApi->update($attributeData['attribute_code'], $attribute->getData());
-                        Mage::dispatchEvent('retailops_catalog_attribute_update_after',
-                            array('attribute_data' => $attribute));
-                    } else {
-                        Mage::dispatchEvent('retailops_catalog_attribute_create_before',
-                            array('attribute_data' => $attribute));
-                        $attributeId = $attributeApi->create($attribute->getData());
-                        Mage::dispatchEvent('retailops_catalog_attribute_create_after',
-                            array('attribute_id' => $attributeId, 'attribute_data' => $attribute));
-                        if ($this->_usesSource($attribute)) {
-                            $this->_sourceAttributes[$attributeId] = $attribute->getData('attribute_code');
+                    if (!in_array($attributeData['attribute_code'], $this->_wereProcessed)) {
+                        if ($attributeId !== false) {
+                            if (!$attributeData['no_update_if_exists']) {
+                                Mage::dispatchEvent('retailops_catalog_attribute_update_before',
+                                    array('attribute_data' => $attribute));
+                                $attributeApi->update($attributeData['attribute_code'], $attribute->getData());
+                                Mage::dispatchEvent('retailops_catalog_attribute_update_after',
+                                    array('attribute_data' => $attribute));
+                            }
                         } else {
-                            $this->_simpleAttributes[$attributeId] = $attribute->getData('attribute_code');
+                            Mage::dispatchEvent('retailops_catalog_attribute_create_before',
+                                array('attribute_data' => $attribute));
+                            $attributeId = $attributeApi->create($attribute->getData());
+                            Mage::dispatchEvent('retailops_catalog_attribute_create_after',
+                                array('attribute_id' => $attributeId, 'attribute_data' => $attribute));
+                            if ($this->_usesSource($attribute)) {
+                                $this->_sourceAttributes[$attributeId] = $attribute->getData('attribute_code');
+                            } else {
+                                $this->_simpleAttributes[$attributeId] = $attribute->getData('attribute_code');
+                            }
                         }
+                        $this->_wereProcessed[] = $attributeData['attribute_code'];
                     }
                     $attributeGroup = $attributeData['group_name'];
                     $attributeGroupId = null;
@@ -410,6 +420,8 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
                         }
                         $productData[$code] = $valuesIds;
                     }
+                } elseif (isset($attributeData['value'])) {
+                    $productData[$code] = $attributeData['value'];
                 }
             }
         }

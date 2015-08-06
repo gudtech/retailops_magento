@@ -30,7 +30,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Configurable extends RetailOps_Api_Mod
     protected $_associations        = array();
     protected $_configurableOptions = array();
 
-    public function _construct()
+    protected function _construct()
     {
         $this->_errorCodes = array(
             'cant_save_configurable_data' => 301,
@@ -70,11 +70,15 @@ class RetailOps_Api_Model_Catalog_Adapter_Configurable extends RetailOps_Api_Mod
                 $childProductId = $skuToIdMap[$sku];
                 if ($parentSkus) {
                     foreach ($parentSkus as $parentSku) {
-                        $parentProductId = $skuToIdMap[$parentSku];
-                        if (!isset($parentChildIds[$parentProductId])) {
-                            $parentChildIds[$parentProductId]['add'] = array();
+                        if (isset($skuToIdMap[$parentSku])) {
+                            $parentProductId = $skuToIdMap[$parentSku];
+                            if (!isset($parentChildIds[$parentProductId])) {
+                                $parentChildIds[$parentProductId]['add'] = array();
+                            }
+                            $parentChildIds[$parentProductId]['add'][] = $childProductId;
+                        } else {
+                            $failedSkus[$sku] = sprintf('Parent product "%s" not found', $parentSku);
                         }
-                        $parentChildIds[$parentProductId]['add'][] = $childProductId;
                     }
                 } else {
                     $disassociateIds[] = $childProductId;
@@ -107,7 +111,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Configurable extends RetailOps_Api_Mod
                                             ->saveProducts($configurable, $assignedProducts);
                     $idsToReindex[] = $parentId;
                 } catch (Exception $e) {
-                    $failedSkus[] = $configurable->getSku();
+                    $failedSkus[$configurable->getSku()] = $e->getMessage();
                 }
             }
         }
@@ -128,7 +132,15 @@ class RetailOps_Api_Model_Catalog_Adapter_Configurable extends RetailOps_Api_Mod
                     foreach ($configurableAttributes as $attributeCode => $attribute) {
                         $attributeId = $attributesAdapter->findAttribute($attributeCode);
                         if ($attributeId === false) {
-                            Mage::throwException(sprintf('Attribute "%" not found', $attributeCode));
+                            Mage::throwException(sprintf('Attribute "%s" not found', $attributeCode));
+                        }
+                        /** @var Mage_Catalog_Model_Resource_Eav_Attribute $attribute */
+                        $attribute = Mage::getResourceModel('catalog/eav_attribute')->load($attributeId);
+                        $isInSet = Mage::getResourceModel('eav/entity_attribute_set')->getSetInfo(array($attributeId),
+                            $configurable->getAttributeSetId());
+                        if (!$isInSet[$attributeId]
+                            || !$productType->canUseAttribute($attribute)) {
+                            Mage::throwException(sprintf('Attribute "%s" is not assigned to attribute set or cannot be used for configurable products', $attributeCode));
                         }
                         $usedAttributes[] = $attributeId;
                     }
@@ -175,7 +187,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Configurable extends RetailOps_Api_Mod
                     $idsToReindex[] = $configurable->getId();
                     $configurable->clearInstance();
                 } catch (Exception $e) {
-                    $failedSkus[] = $configurable->getSku();
+                    $failedSkus[$configurable->getSku()] = $e->getMessage();
                 }
             }
         }
@@ -184,7 +196,12 @@ class RetailOps_Api_Model_Catalog_Adapter_Configurable extends RetailOps_Api_Mod
                 Mage_Catalog_Model_Product_Type_Configurable::TYPE_CODE);
         }
         if ($failedSkus) {
-            $this->_throwException('Configurable data is not saved for ' . implode(',', array_unique($failedSkus)),
+            $finalMessage = array();
+            foreach ($failedSkus as $sku => $message) {
+                $finalMessage[] = sprintf('sku: "%s", error: "%s"', $sku, $message);
+            }
+            $finalMessage = implode('; ', $finalMessage);
+            $this->_throwException('Configurable data is not saved for: ' . $finalMessage,
                 'cant_save_configurable_data');
         }
     }
