@@ -333,7 +333,7 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
             try {
                 $invoiceResult = array();
                 $invoiceResult['invoice_increment_id'] = $invoice->getIncrementId();
-                if ($invoice->canCapture()) {
+                if (!$invoice->canCapture()) {
                     throw new Exception('Invoice cannot be captured.');
                 }
                 $invoice->capture();
