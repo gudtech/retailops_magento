@@ -35,6 +35,8 @@ class RetailOps_Api_Helper_Data extends Mage_Api_Helper_Data
 
     const DEFAULT_LIMIT = 10;
 
+    const XML_CONFIG_DEFAULT_GROUP      = 'catalog';
+
     public function getRetOpsStatuses()
     {
         return array(
@@ -95,6 +97,10 @@ class RetailOps_Api_Helper_Data extends Mage_Api_Helper_Data
      */
     public function getConfig($path)
     {
+        if (strpos($path, '/') === false) {
+            $path = self::XML_CONFIG_DEFAULT_GROUP . '/' . $path;
+        }
+        
         return Mage::getStoreConfig('retailops_settings/' . $path);
     }
 

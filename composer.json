@@ -1,0 +1,16 @@
+{
+    "name"          : "gudTECH/retailops_magento",
+    "type"          : "magento-module",
+    "license"       : "MIT",
+    "homepage"      : "http://www.retailops.com/",
+    "description"   : "The Ultimate Tools for Retail",
+    "authors": [
+        {
+            "name"  : "RetailOps",
+            "email" : "info@retailops.com"
+        }
+    ],
+    "require": {
+        "magento-hackathon/magento-composer-installer": "*"
+    }
+}
