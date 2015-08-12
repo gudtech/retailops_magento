@@ -331,6 +331,9 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
         /** @var $invoice Mage_Sales_Model_Order_Invoice */
         foreach ($invoices as $invoice) {
             try {
+                if ($invoice->getState() == Mage_Sales_Model_Order_Invoice::STATE_PAID) {
+                    continue;
+                }
                 $invoiceResult = array();
                 $invoiceResult['invoice_increment_id'] = $invoice->getIncrementId();
                 if (!$invoice->canCapture()) {
