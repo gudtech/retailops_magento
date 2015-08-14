@@ -258,8 +258,8 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
     {
         if (!empty($data['attribute_set'])) {
             $attributeSet = $data['attribute_set'];
-            $attributeSetId = $this->_getAttributeSetIdByName($attributeSet);
-            if ($attributeSetId === false) {
+            $attributeSetId = (int)$this->_getAttributeSetIdByName($attributeSet);
+            if ($attributeSetId === 0) {
                 try {
                     $attributeSetId = $this->_createAttributeSet($attributeSet, $data['sku']);
                 } catch (Mage_Api_Exception $e) {
