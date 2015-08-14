@@ -84,10 +84,48 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                 $shipmentInfo = $shipment->getShipment();
                 $trackInfo    = isset($shipmentInfo['track']) ? $shipmentInfo['track'] : array();
                 $invoiceInfo  = isset($shipmentInfo['invoice']) ? $shipmentInfo['invoice'] : array();
+                $shipmentResult = array();
                 $shipmentIncrementId = null;
+
+                /** @var Mage_Sales_Model_Order $order */
+                $order = Mage::getModel('sales/order');
+                $order->loadByIncrementId($orderIncrementId);
+                if (!$order->getId()) {
+                    throw new Exception('Order is not found');
+                }
+
                 // create shipment
                 try {
-                    $shipmentResult = array();
+                    // Try to locate existing shipment
+                    $orderShipments = $order->getShipmentsCollection();
+                    if (count($orderShipments)) {
+                        foreach ($orderShipments as $orderShipment) {
+                            $retailopsShipmentId = $orderShipment->getRetailopsShipmentId();
+                            if ($retailopsShipmentId && $shipmentInfo['retailops_shipment_id']
+                                && $retailopsShipmentId == $shipmentInfo['retailops_shipment_id']) {
+                                $shipmentIncrementId = $orderShipment->getIncrementId();
+
+                                break;
+                            }
+
+                            $shipmentComments = $orderShipment->getCommentsCollection();
+                            foreach ($shipmentComments as $shipmentComment) {
+                                if ($shipmentComment->getComment() == $shipmentInfo['comment']) {
+                                    $shipmentIncrementId = $orderShipment->getIncrementId();
+
+                                    break;
+                                }
+                            }
+
+                            if ($shipmentIncrementId) {
+                                break;
+                            }
+                        }
+                    }
+
+                    // Create a new shipment if we didn't find an existing one
+                    // Only adding shipment to result if it was created
+                    if (!$shipmentIncrementId && $order->canShip()) {
                     $shipmentIncrementId = $this->create($orderIncrementId,
                         $shipmentInfo['qtys'],
                         $shipmentInfo['comment'],
@@ -102,6 +140,13 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                     } else {
                         $shipmentResult['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
                         $shipmentResult['message'] = Mage::helper('retailops_api')->__('Can not create shipment');
+                    }
+                    }
+
+                    // We should have found or created a shipment by now
+                    if (!$shipmentIncrementId) {
+                        $shipmentResult['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
+                        $shipmentResult['message'] = Mage::helper('retailops_api')->__('Shipment not found');
                     }
                 } catch (Mage_Core_Exception $e) {
                     $shipmentResult['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
@@ -157,6 +202,8 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
 
                     // create invoice
                     /** @var Mage_Sales_Model_Order $order */
+                    // Note that this does need to be loaded again.  The item data may be stale if a shipment
+                    // was submitted above.
                     $order = Mage::getModel('sales/order');
                     $order->loadByIncrementId($orderIncrementId);
                     $isFullyShipped = $this->_checkAllItemsShipped($order);
