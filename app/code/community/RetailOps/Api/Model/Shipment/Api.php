@@ -26,6 +26,36 @@ THE SOFTWARE.
 class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_Api
 {
     /**
+     * Create new shipment for order
+     *
+     * @param string $orderIncrementId
+     * @param array $itemsQty
+     * @param string $comment
+     * @param booleam $email
+     * @param boolean $includeComment
+     * @param int $retailopsShipmentId
+     * @return string
+     */
+    public function create($orderIncrementId, $itemsQty = array(), $comment = null, $email = false,
+        $includeComment = false, $retailopsShipmentId = null
+    ) {
+        $shipmentIncrementId = parent::create($orderIncrementId, $itemsQty, $comment, $email, $includeComment);
+
+        if ($retailopsShipmentId && $shipmentIncrementId) {
+            $shipment = Mage::getModel('sales/order_shipment')->loadByIncrementId($shipmentIncrementId);
+
+            if (!$shipment->getId()) {
+                $this->_fault('shipment_not_exists');
+            }
+
+            $shipment->setRetailopsShipmentId($retailopsShipmentId);
+            $shipment->save();
+        }
+
+        return $shipmentIncrementId;
+    }
+
+    /**
      * Creates shipment, adds track numbers, creates new invoices
      *
      * @param $shipments array
@@ -62,7 +92,8 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                         $shipmentInfo['qtys'],
                         $shipmentInfo['comment'],
                         $shipmentInfo['email'],
-                        $shipmentInfo['include_comment']
+                            $shipmentInfo['include_comment'],
+                            $shipmentInfo['retailops_shipment_id']
                     );
 
                     if ($shipmentIncrementId) {
