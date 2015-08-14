@@ -126,21 +126,21 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                     // Create a new shipment if we didn't find an existing one
                     // Only adding shipment to result if it was created
                     if (!$shipmentIncrementId && $order->canShip()) {
-                    $shipmentIncrementId = $this->create($orderIncrementId,
-                        $shipmentInfo['qtys'],
-                        $shipmentInfo['comment'],
-                        $shipmentInfo['email'],
+                        $shipmentIncrementId = $this->create($orderIncrementId,
+                            $shipmentInfo['qtys'],
+                            $shipmentInfo['comment'],
+                            $shipmentInfo['email'],
                             $shipmentInfo['include_comment'],
                             $shipmentInfo['retailops_shipment_id']
-                    );
+                        );
 
-                    if ($shipmentIncrementId) {
-                        $shipmentResult['status'] = RetailOps_Api_Helper_Data::API_STATUS_SUCCESS;
-                        $shipmentResult['shipment_increment_id'] = $shipmentIncrementId;
-                    } else {
-                        $shipmentResult['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
-                        $shipmentResult['message'] = Mage::helper('retailops_api')->__('Can not create shipment');
-                    }
+                        if ($shipmentIncrementId) {
+                            $shipmentResult['status'] = RetailOps_Api_Helper_Data::API_STATUS_SUCCESS;
+                            $shipmentResult['shipment_increment_id'] = $shipmentIncrementId;
+                        } else {
+                            $shipmentResult['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
+                            $shipmentResult['message'] = Mage::helper('retailops_api')->__('Can not create shipment');
+                        }
                     }
 
                     // We should have found or created a shipment by now
