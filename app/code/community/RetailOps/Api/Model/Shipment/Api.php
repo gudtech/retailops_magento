@@ -111,12 +111,27 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                 $result['shipment_result'] = $shipmentResult;
                 if ($shipmentIncrementId) {
                     if ($trackInfo) {
+                        $existingShipmentInfo = Mage::getModel('sales/order_shipment_api')->info($shipmentIncrementId);
+
                         $result['track_result'] = array();
                         foreach ($trackInfo as $track) {
                             // add shipment track
                             try {
                                 $trackResult = array();
                                 $track = new Varien_Object($track);
+
+                                $trackId = null;
+                                foreach ($existingShipmentInfo['tracks'] as $existingTrack) {
+                                    if ($existingTrack['track_number'] == $track->getData('track_number')) {
+                                        $trackId = $existingTrack['track_id'];
+
+                                        break;
+                                    }
+                                }
+
+                                if ($trackId) {
+                                    continue;
+                                }
 
                                 Mage::dispatchEvent(
                                     'retailops_shipment_add_track_before',
