@@ -152,8 +152,8 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                     $shipmentResult['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
                     $shipmentResult['message'] = $e->getCustomMessage() ? $e->getCustomMessage() : $e->getMessage();
                 }
+                $result['shipment_result'] = $shipmentResult ? array($shipmentResult) : array();
 
-                $result['shipment_result'] = $shipmentResult;
                 if ($shipmentIncrementId) {
                     if ($trackInfo) {
                         $existingShipmentInfo = Mage::getModel('sales/order_shipment_api')->info($shipmentIncrementId);
