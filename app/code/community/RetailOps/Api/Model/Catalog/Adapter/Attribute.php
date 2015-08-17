@@ -296,7 +296,9 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
      */
     protected function _getAttributeSetIdByName($set)
     {
-        return array_search($set, $this->_attributeSets);
+        $tolower = function_exists('mb_strtolower') ? 'mb_strtolower' : 'strtolower';
+
+        return array_search($tolower($set), array_map($tolower, $this->_attributeSets));
     }
 
     /**
