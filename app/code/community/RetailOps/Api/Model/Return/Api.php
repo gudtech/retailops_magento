@@ -25,6 +25,8 @@ THE SOFTWARE.
 
 class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_Api
 {
+    protected $_requestParams;
+
     /**
      * Initialize attributes mapping
      */
@@ -42,6 +44,8 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
      */
     public function returnPush($returns)
     {
+        $this->_requestParams = $returns;
+
         if (isset($returns['records'])) {
             $returns = $returns['records'];
         }
@@ -50,19 +54,20 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
         foreach ($returns as $return) {
             try {
                 $result = array();
-            $returnObj = new Varien_Object($return);
-            Mage::dispatchEvent(
-                'retailops_return_push_record',
-                array('record' => $returnObj)
-            );
-            $order = Mage::getModel('sales/order')->loadByIncrementId($returnObj->getOrderIncrementId());
+                $returnObj = new Varien_Object($return);
+                Mage::dispatchEvent(
+                    'retailops_return_push_record',
+                    array('record' => $returnObj)
+                );
+                $order = Mage::getModel('sales/order')->loadByIncrementId($returnObj->getOrderIncrementId());
                 $result = $this->create($order, $returnObj->getCreditmemoData(),
-                $returnObj->getComment(), $returnObj->getNotifyCustomer(), $returnObj->getIncludeComment(),
-                $returnObj->getRefundToStoreCredit());
+                    $returnObj->getComment(), $returnObj->getNotifyCustomer(), $returnObj->getIncludeComment(),
+                    $returnObj->getRefundToStoreCredit());
             } catch (Exception $e) {
                 $result['message'] = $e->getMessage();
                 $result['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
                 $result['stack_trace'] = $e->getTraceAsString();
+                $result['request_params'] = $this->_requestParams;
             }
             $fullResult['records'][] = $result;
         }
@@ -152,6 +157,7 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
             $result['message'] = $e->getMessage();
             $result['code'] = $e->getCode();
             $result['stack_trace'] = $e->getTraceAsString();
+            $result['request_params'] = $this->_requestParams;
         }
 
         return $result;

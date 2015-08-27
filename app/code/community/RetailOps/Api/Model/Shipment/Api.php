@@ -25,6 +25,8 @@ THE SOFTWARE.
 
 class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_Api
 {
+    protected $_requestParams;
+
     /**
      * Create new shipment for order
      *
@@ -63,6 +65,8 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
      */
     public function shipmentPush($shipments)
     {
+        $this->_requestParams = $shipments;
+
         $fullResult = array();
         $fullResult['records'] = array();
         if (isset($shipments['records'])) {
@@ -152,6 +156,7 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                     $shipmentResult['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
                     $shipmentResult['message'] = $e->getCustomMessage() ? $e->getCustomMessage() : $e->getMessage();
                     $shipmentResult['stack_trace'] = $e->getTraceAsString();
+                    $shipmentResult['request_params'] = $this->_requestParams;
                 }
                 $result['shipment_result'] = $shipmentResult ? array($shipmentResult) : array();
 
@@ -197,6 +202,7 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                                 $trackResult['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
                                 $trackResult['message'] = $e->getMessage();
                                 $trackResult['stack_trace'] = $e->getTraceAsString();
+                                $trackResult['request_params'] = $this->_requestParams;
                             }
                             $result['track_result'][] = $trackResult;
                         }
@@ -253,6 +259,7 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                 $result['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
                 $result['message'] = $e->getMessage();
                 $result['stack_trace'] = $e->getTraceAsString();
+                $result['request_params'] = $this->_requestParams;
             }
             $fullResult['records'][] = $result;
         }
@@ -266,6 +273,8 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
      */
     public function orderClose($ordersData)
     {
+        $this->_requestParams = $ordersData;
+
         $fullResult = array();
         $fullResult['records'] = array();
         if (isset($ordersData['records'])) {
@@ -329,6 +338,7 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                 $result['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
                 $result['message'] = $e->getMessage();
                 $result['stack_trace'] = $e->getTraceAsString();
+                $result['request_params'] = $this->_requestParams;
             }
             $fullResult['records'][] = $result;
         }
@@ -395,6 +405,7 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
             $result['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
             $result['message'] = $e->getMessage();
             $result['stack_trace'] = $e->getTraceAsString();
+            $result['request_params'] = $this->_requestParams;
         }
 
         return $result;
@@ -448,6 +459,7 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                 $invoiceResult['message'] = $e->getMessage();
                 $invoiceResult['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
                 $invoiceResult['stack_trace'] = $e->getTraceAsString();
+                $invoiceResult['request_params'] = $this->_requestParams;
             }
             $result[] = $invoiceResult;
         }
