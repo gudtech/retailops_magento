@@ -45,21 +45,29 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
         if (isset($returns['records'])) {
             $returns = $returns['records'];
         }
-        $result = array();
-        $result['records'] = array();
+        $fullResult = array();
+        $fullResult['records'] = array();
         foreach ($returns as $return) {
+            try {
+                $result = array();
             $returnObj = new Varien_Object($return);
             Mage::dispatchEvent(
                 'retailops_return_push_record',
                 array('record' => $returnObj)
             );
             $order = Mage::getModel('sales/order')->loadByIncrementId($returnObj->getOrderIncrementId());
-            $result['records'][] = $this->create($order, $returnObj->getCreditmemoData(),
+                $result = $this->create($order, $returnObj->getCreditmemoData(),
                 $returnObj->getComment(), $returnObj->getNotifyCustomer(), $returnObj->getIncludeComment(),
                 $returnObj->getRefundToStoreCredit());
+            } catch (Exception $e) {
+                $result['message'] = $e->getMessage();
+                $result['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
+                $result['stack_trace'] = $e->getTraceAsString();
+            }
+            $fullResult['records'][] = $result;
         }
 
-        return $result;
+        return $fullResult;
     }
 
     /**
@@ -143,6 +151,7 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
             $result['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
             $result['message'] = $e->getMessage();
             $result['code'] = $e->getCode();
+            $result['stack_trace'] = $e->getTraceAsString();
         }
 
         return $result;
