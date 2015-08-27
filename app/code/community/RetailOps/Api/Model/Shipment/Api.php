@@ -151,7 +151,7 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                 } catch (Mage_Core_Exception $e) {
                     $shipmentResult['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
                     $shipmentResult['message'] = $e->getCustomMessage() ? $e->getCustomMessage() : $e->getMessage();
-                    $shipmentResult['stack_trace'] = debug_backtrace();
+                    $shipmentResult['stack_trace'] = $e->getTraceAsString();
                 }
                 $result['shipment_result'] = $shipmentResult ? array($shipmentResult) : array();
 
@@ -196,7 +196,7 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                             } catch (Mage_Core_Exception $e) {
                                 $trackResult['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
                                 $trackResult['message'] = $e->getMessage();
-                                $trackResult['stack_trace'] = debug_backtrace();
+                                $trackResult['stack_trace'] = $e->getTraceAsString();
                             }
                             $result['track_result'][] = $trackResult;
                         }
@@ -252,7 +252,7 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
             } catch (Exception $e) {
                 $result['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
                 $result['message'] = $e->getMessage();
-                $result['stack_trace'] = debug_backtrace();
+                $result['stack_trace'] = $e->getTraceAsString();
             }
             $fullResult['records'][] = $result;
         }
@@ -328,7 +328,7 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
             } catch (Exception $e) {
                 $result['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
                 $result['message'] = $e->getMessage();
-                $result['stack_trace'] = debug_backtrace();
+                $result['stack_trace'] = $e->getTraceAsString();
             }
             $fullResult['records'][] = $result;
         }
@@ -394,7 +394,7 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
         } catch (Exception $e) {
             $result['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
             $result['message'] = $e->getMessage();
-            $result['stack_trace'] = debug_backtrace();
+            $result['stack_trace'] = $e->getTraceAsString();
         }
 
         return $result;
@@ -447,7 +447,7 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
             } catch (Exception $e) {
                 $invoiceResult['message'] = $e->getMessage();
                 $invoiceResult['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
-                $invoiceResult['stack_trace'] = debug_backtrace();
+                $invoiceResult['stack_trace'] = $e->getTraceAsString();
             }
             $result[] = $invoiceResult;
         }
