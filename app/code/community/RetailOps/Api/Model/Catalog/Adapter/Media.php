@@ -319,7 +319,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
             return true;
         }
         $fileName = preg_quote($data['filename_match'], '~');
-        if (preg_grep('~' . $fileName . '~', $this->_fileNames)) {
+        if (strlen($fileName) && preg_grep('~' . $fileName . '~', $this->_fileNames)) {
             return true;
         }
 
