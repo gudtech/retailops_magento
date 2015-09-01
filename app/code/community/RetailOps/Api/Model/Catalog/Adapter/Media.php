@@ -329,7 +329,6 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
     protected function _getFileName($url, $mediakey)
     {
         $fileName  = Varien_File_Uploader::getCorrectFileName(basename($url));
-        $fileName = str_replace($mediakey, '', $fileName);
         $fileName = trim($fileName, '_');
 
         return $fileName;
