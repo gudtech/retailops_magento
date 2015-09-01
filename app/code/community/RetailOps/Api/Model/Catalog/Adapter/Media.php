@@ -178,9 +178,6 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
                             true
                         );
 
-                        // Remove temporary directory
-                        $ioAdapter->rmdir($tmpDirectory, true);
-
                         $newImages[$file] = $newImage['mediakey'];
 
                         $gallery->getBackend()->updateImage($product, $file, $newImage);
@@ -204,6 +201,9 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
                 $result[$sku]['general'] = $e->getMessage();
             }
         }
+
+        // Remove temporary directory
+        $ioAdapter->rmdir($tmpDirectory, true);
 
         return $result;
     }
