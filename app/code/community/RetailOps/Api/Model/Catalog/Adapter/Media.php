@@ -127,6 +127,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
         $tmpDirectory = Mage::getBaseDir('var') . DS . 'api' . DS . uniqid();
         $ioAdapter->checkAndCreateFolder($tmpDirectory);
         $ioAdapter->open(array('path' => $tmpDirectory));
+        $errorLogPath = '/tmp/retailops_magento_image_error.log';
         if (!$item) {
             $items = Mage::getModel('retailops_api/catalog_media_item')->getCollection();
             $limit = $this->getHelper()->getConfig('media_processing_products_limit');
@@ -185,7 +186,9 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
                             $gallery->getBackend()->setMediaAttribute($product, $newImage['types'], $file);
                         }
                     } catch (Exception $e) {
-                        $imageResult[] = sprintf('Could not save image %s, error message: %s', $newImage['mediakey'], $e->getMessage());
+                        $message = sprintf('Could not save image %s, error message: %s', $newImage['mediakey'], $e->getMessage());
+                        $imageResult[] = $message;
+                        file_put_contents($errorLogPath, "$message\n", FILE_APPEND);
                     }
                 }
                 if ($imageResult) {
@@ -199,6 +202,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
                 $product->clearInstance();
             } catch (Exception $e) {
                 $result[$sku]['general'] = $e->getMessage();
+                file_put_contents($errorLogPath, "{$e->getMessage()}\n", FILE_APPEND);
             }
         }
 
