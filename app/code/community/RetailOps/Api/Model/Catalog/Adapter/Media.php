@@ -196,7 +196,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
                             $gallery->getBackend()->setMediaAttribute($product, $newImage['types'], $file);
                         }
                     } catch (Exception $e) {
-                        $message = sprintf('Could not save image %s, error message: %s', $newImage['mediakey'], $e->getMessage());
+                        $message = sprintf("Could not process image %s, error message: %s", $newImage['download_url'], $e->getMessage());
                         $imageResult[] = $message;
                         file_put_contents($errorLogPath, "$message\n", FILE_APPEND);
                     }
