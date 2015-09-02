@@ -34,9 +34,6 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
 
     protected $_section   = 'media';
 
-    protected $_mediaKeys = array();
-    protected $_fileNames = array();
-
     protected $_mediaDataToSave = array();
     protected $_straightMediaProcessing = false;
 
@@ -147,11 +144,10 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
             $gallery = $this->_getGalleryAttribute($product);
             $data = json_decode($item->getMediaData(), true);
             $allImages = $this->_getResource()->getProductMedia($productId);
-            $this->_mediaKeys = array();
-            $this->_fileNames = array();
+            $existingImageMap = array();
             foreach ($allImages as $image) {
-                $this->_mediaKeys[] = $image['retailops_mediakey'];
-                $this->_fileNames[] = $image['value'];
+                $existingImageMap[$image['value_id']]
+                    = array( 'mediakey' => $image['retailops_mediakey'], 'filename' => $image['value'] );
             }
             $sku = $product->getSku();
             $result[$sku] = array();
@@ -159,27 +155,29 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
                 $imageResult = array();
                 $newImages = array();
                 foreach ($data as $newImage) {
-                    if ($this->_imageExists($newImage)) {
-                        continue;
-                    }
                     try {
-                        $url = $newImage['download_url'];
-                        if (!$this->_httpFileExists($url)) {
-                            Mage::throwException('Image does not exist.');
+                        $file = $this->_existingImage($existingImageMap, $newImage);
+
+                        if (!$file) {
+                            $url = $newImage['download_url'];
+                            if (!$this->_httpFileExists($url)) {
+                                Mage::throwException('Image does not exist.');
+                            }
+                            $fileName = $this->_getFileName($url, $newImage['mediakey']);
+                            $fileName = $tmpDirectory . DS . $fileName;
+                            $ioAdapter->cp($url, $fileName);
+
+
+                            // Adding image to gallery
+                            $file = $gallery->getBackend()->addImage(
+                                $product,
+                                $fileName,
+                                null,
+                                true
+                            );
+
+                            $newImages[$file] = $newImage['mediakey'];
                         }
-                        $fileName = $this->_getFileName($url, $newImage['mediakey']);
-                        $fileName = $tmpDirectory . DS . $fileName;
-                        $ioAdapter->cp($url, $fileName);
-
-                        // Adding image to gallery
-                        $file = $gallery->getBackend()->addImage(
-                            $product,
-                            $fileName,
-                            null,
-                            true
-                        );
-
-                        $newImages[$file] = $newImage['mediakey'];
 
                         $gallery->getBackend()->updateImage($product, $file, $newImage);
                         if (isset($newImage['types'])) {
@@ -312,21 +310,29 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
     }
 
     /**
-     * Check if image already exists based on mediakey and filename
+     * Get existing image filename, if any, based on mediakey and filename
      *
-     * @param $data
-     * @return bool
+     * @param $existingImageMap
+     * @param $imageData
+     * @return mixed
      */
-    protected function _imageExists($data)
+    protected function _existingImage($existingImageMap, $imageData)
     {
-        if (in_array($data['mediakey'], $this->_mediaKeys)) {
-            return true;
+        // Prioritize mediakeys. Search all existing images for mediakey before considering filename_match.
+        foreach ($existingImageMap as $existingImageData) {
+            if ($imageData['mediakey'] == $existingImageData['mediakey']) {
+                return $existingImageData['filename'];
+            }
         }
-        $fileName = preg_quote($data['filename_match'], '~');
-        if (strlen($fileName) && preg_grep('~' . $fileName . '~', $this->_fileNames)) {
-            return true;
-        }
+        
+        foreach ($existingImageMap as $existingImageData) {
+            $fileNameMatch = preg_quote($data['filename_match'], '~');
 
+            if (strlen($fileNameMatch) && preg_grep('~' . $fileNameMatch . '~', $existingImageData['filename'])) {
+                return $existingImageData['filename'];
+            }
+        }
+        
         return false;
     }
 
