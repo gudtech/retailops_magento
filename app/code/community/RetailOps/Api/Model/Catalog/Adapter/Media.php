@@ -124,6 +124,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
         $tmpDirectory = Mage::getBaseDir('var') . DS . 'api' . DS . uniqid();
         $ioAdapter->checkAndCreateFolder($tmpDirectory);
         $ioAdapter->open(array('path' => $tmpDirectory));
+        $remoteCopyRetryLimit = 3;
         $errorLogPath = '/tmp/retailops_magento_image_error.log';
         if (!$item) {
             $items = Mage::getModel('retailops_api/catalog_media_item')->getCollection();
@@ -167,6 +168,17 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
                             $fileName = $tmpDirectory . DS . $fileName;
                             $ioAdapter->cp($url, $fileName);
 
+                            $retry = 0;
+                            $remoteCopySuccess = false;
+                            while ($retry++ < $remoteCopyRetryLimit && !$remoteCopySuccess) {
+                                $remoteCopySuccess = $ioAdapter->cp($url, $fileName);
+                            }
+
+                            if (!$remoteCopySuccess) {
+                                $remoteCopyError = error_get_last();
+
+                                throw new Exception($remoteCopyError['message']);
+                            }
 
                             // Adding image to gallery
                             $file = $gallery->getBackend()->addImage(
