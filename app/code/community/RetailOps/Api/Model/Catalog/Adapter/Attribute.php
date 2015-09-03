@@ -404,7 +404,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
                         foreach ($values as $value) {
                             if (!isset($this->_attributeOptionCache[$code][$value])) {
                                 $this->_newOptions[$attributeId][] = $value;
-                                $this->_attributeOptionCache[$code][$value] = null;
+                                $this->_attributeOptionCache[$code][$value] = true;
                             }
                         }
                     } else {
