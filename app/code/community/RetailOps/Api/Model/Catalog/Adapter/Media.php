@@ -83,11 +83,11 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
                 if($mediaData['position'] == '2') { $mediaData->setTag('rollover'); }
                 if($productData['sequence']) { $mediaData->setSequence($productData['sequence']); }
 
-                // if($productData['type_id'] == 'configurable') {
-                //     $mediaData->setConfigurable(true);
-                //     $configSku = $productData['configurable_sku'][0];
-                //     $mediaData->setConfigurableSku($configSku);
-                // }
+                if($productData['type_id'] == 'configurable') {
+                    $mediaData->setConfigurable(true);
+                    $configSku = $productData['configurable_sku'][0];
+                    $mediaData->setConfigurableSku($configSku);
+                }
             
                 Mage::dispatchEvent('retailops_catalog_media_process_before',
                     array('media_data' => $mediaData));
@@ -410,11 +410,12 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
                     'color' => $color,
                     'tag' => $swatches[$image['value']],
                     'sequence' => $sequence[$image['value']],
-                    'order' => $order[$image['value']],
+                    'position' => $order[$image['value']],
                  );
             }
         }
         if ($dataToUpdate) {
+            Mage::log(print_r($dataToUpdate, true), null, 'updateMediaKeys.log');
             Mage::getResourceModel('retailops_api/api')->updateMediaKeys($dataToUpdate);
         }
     }
