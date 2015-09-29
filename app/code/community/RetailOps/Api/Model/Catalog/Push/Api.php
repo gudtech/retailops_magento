@@ -119,7 +119,7 @@ class RetailOps_Api_Model_Catalog_Push_Api extends RetailOps_Api_Model_Catalog_A
             $data['product_id'] = $this->_skuToIdMap[$data['sku']];
             $product->load($data['product_id']);
         }
-
+        //file_put_contents(Mage::getBaseDir()."/multiarray.json",json_encode($data).'|', FILE_APPEND);
         foreach ($this->_dataAdapters as $adapter) {
             /** @var $adapter RetailOps_Api_Model_Catalog_Adapter_Abstract */
             $adapter->processData($data, $product);
@@ -170,33 +170,34 @@ class RetailOps_Api_Model_Catalog_Push_Api extends RetailOps_Api_Model_Catalog_A
         $processedSkus = array();
         try {
             //$this->_stopReindex();
-            $this->beforeDataPrepare();
-            foreach ($productsData as $key => $data) {
-                try {
-                    $dataObj = new Varien_Object($data);
-                    Mage::dispatchEvent('retailops_catalog_push_data_prepare_before', array('data' => $dataObj));
-                    $data = $dataObj->getData();
-                    $processedSkus[] = $data['sku'];
-                    $this->prepareData($data);
-                } catch (RetailOps_Api_Model_Catalog_Exception $e) {
-                    unset($productsData[$key]);
-                    $this->_addError($e);
-                }
-            }
-            $this->afterDataPrepare();
+            // $this->beforeDataPrepare();
+            // foreach ($productsData as $key => $data) {
+            //     try {
+            //         $dataObj = new Varien_Object($data);
+            //         Mage::dispatchEvent('retailops_catalog_push_data_prepare_before', array('data' => $dataObj));
+            //         $data = $dataObj->getData();
+            //         $processedSkus[] = $data['sku'];
+            //         $this->prepareData($data);
+            //     } catch (RetailOps_Api_Model_Catalog_Exception $e) {
+            //         unset($productsData[$key]);
+            //         $this->_addError($e);
+            //     }
+            // }
+            // $this->afterDataPrepare();
 
-            $this->beforeDataProcess();
+            //$this->beforeDataProcess();
             foreach ($productsData as $data) {
                 try {
-                    $dataObj = new Varien_Object($data);
-                    Mage::dispatchEvent('retailops_catalog_push_data_process_before', array('data' => $dataObj));
-                    $data = $dataObj->getData();
+                    //$dataObj = new Varien_Object($data);
+                    //Mage::dispatchEvent('retailops_catalog_push_data_process_before', array('data' => $dataObj));
+                    //$data = $dataObj->getData();
                     $this->processData($data);
+                    $this->afterDataProcess();
                 } catch (RetailOps_Api_Model_Catalog_Exception $e) {
                     $this->_addError($e);
                 }
             }
-            $this->afterDataProcess();
+            // $this->afterDataProcess();
             //$this->_startReindex();
         } catch (Exception $e) {
             $this->_addError(new RetailOps_Api_Model_Catalog_Exception($e->getMessage()));
