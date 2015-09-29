@@ -50,6 +50,7 @@ class RetailOps_Api_Model_Catalog_Push_Api extends RetailOps_Api_Model_Catalog_A
                 $adapter->beforeDataPrepare();
             }
         } catch (RetailOps_Api_Model_Catalog_Exception $e) {
+            Mage::logException($e);
             $this->_addError($e);
         }
 
@@ -82,6 +83,7 @@ class RetailOps_Api_Model_Catalog_Push_Api extends RetailOps_Api_Model_Catalog_A
                 $adapter->afterDataPrepare();
             }
         } catch (RetailOps_Api_Model_Catalog_Exception $e) {
+            Mage::logException($e);
             $this->_addError($e);
         }
 
@@ -99,6 +101,7 @@ class RetailOps_Api_Model_Catalog_Push_Api extends RetailOps_Api_Model_Catalog_A
                 $adapter->beforeDataProcess();
             }
         } catch (RetailOps_Api_Model_Catalog_Exception $e) {
+            Mage::logException($e);
             $this->_addError($e);
         }
         $this->_skuToIdMap = $this->_getResource()->getIdsByProductSkus();
@@ -147,6 +150,7 @@ class RetailOps_Api_Model_Catalog_Push_Api extends RetailOps_Api_Model_Catalog_A
                 /** @var $adapter RetailOps_Api_Model_Catalog_Adapter_Abstract */
                 $adapter->afterDataProcess($this->_skuToIdMap);
             } catch (RetailOps_Api_Model_Catalog_Exception $e) {
+                Mage::logException($e);
                 $this->_addError($e);
             }
         }
@@ -200,6 +204,7 @@ class RetailOps_Api_Model_Catalog_Push_Api extends RetailOps_Api_Model_Catalog_A
             // $this->afterDataProcess();
             //$this->_startReindex();
         } catch (Exception $e) {
+            Mage::logException($e);
             $this->_addError(new RetailOps_Api_Model_Catalog_Exception($e->getMessage()));
         }
         foreach ($processedSkus as $sku) {
