@@ -301,7 +301,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
             $productId = $item->getProductId();
             $product = Mage::getModel('catalog/product')->load($productId);
             $product->setStoreId(0); 
-            if($product->getTypeId() == "configurable") {
+            //if($product->getTypeId() == "configurable") {
                 $gallery = $this->_getGalleryAttribute($product);
                 $allImages = $this->_getResource()->getProductEntityMedia($productId);
                 //mage::log(print_r($allImages, true), null, 'allImages.log');
@@ -346,20 +346,22 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
                         $cjmMouseover[$valueId] = '';
                     }
 
-                    //mage::log(print_r($cjmImageswitcher, true), null, 'applyCjmValues.log');
-                    $product->setCjmImageswitcher(serialize($cjmImageswitcher));
-                    //mage::log(print_r($cjmMoreviews, true), null, 'applyCjmValues.log');
-                    $product->setCjmMoreviews(serialize($cjmMoreviews));
-                    //mage::log(print_r($cjmMouseover, true), null, 'applyCjmValues.log');
-                    $product->setCjmMouseover(serialize($cjmMouseover));
                 }
+
+                $product->setCjmImageswitcher(serialize($cjmImageswitcher));
+                $product->setCjmMoreviews(serialize($cjmMoreviews));
+                $product->setCjmMouseover(serialize($cjmMouseover));
+
+                //mage::log(print_r($cjmImageswitcher, true), null, 'applyCjmValues.log');
+                //mage::log(print_r($cjmMoreviews, true), null, 'applyCjmValues.log');
+                //mage::log(print_r($cjmMouseover, true), null, 'applyCjmValues.log');
 
                 try {
                     $product->save();
                 } catch (Exception $e) {
                     Mage::logException($e);
                 }    
-            }
+            //}
         }        
     }
 
