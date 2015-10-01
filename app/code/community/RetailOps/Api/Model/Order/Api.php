@@ -137,6 +137,9 @@ class RetailOps_Api_Model_Order_Api extends Mage_Sales_Model_Order_Api
 
         $result['order_info'] = $this->_getAttributes($order, 'order');
 
+        // Custom changes to set giftcards to proper field to Reops
+        $result['order_info']['gift_cards_amount'] = $result['order_info']['giftcert_amount'];
+        
         $result['shipping_address'] = $this->_getAttributes($order->getShippingAddress(), 'order_address');
         $result['billing_address']  = $this->_getAttributes($order->getBillingAddress(), 'order_address');
         $result['items'] = array();
