@@ -189,6 +189,10 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
                             );
 
                             $newImages[$file] = $newImage['mediakey'];
+                            // Using mediakey as the existingImageMap key, since we don't have
+                            // the image id and this is good enough for storing the new image info
+                            $existingImageMap[$newImage['mediakey']]
+                                = array( 'mediakey' => $newImage['mediakey'], 'filename' => $file );
                         }
 
                         $gallery->getBackend()->updateImage($product, $file, $newImage);
