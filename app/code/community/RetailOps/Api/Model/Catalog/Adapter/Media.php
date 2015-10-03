@@ -158,26 +158,22 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
         /** @var $item RetailOps_Api_Model_Catalog_Media_Item */
         foreach ($items as $item) {
             $productId = $item->getProductId();
-            $product = Mage::getModel('catalog/product')->load($productId);
-            $product->setStoreId(0); //using default store for images import
-            $gallery = $this->_getGalleryAttribute($product);
             $data = json_decode($item->getMediaData(), true);
-            $allImages = $this->_getResource()->getProductMedia($productId);
-            $existingImageMap = array();
-            foreach ($allImages as $image) {
-                $existingImageMap[$image['value_id']]
-                    = array( 'mediakey' => $image['retailops_mediakey'], 'filename' => $image['value'] );
-            }
-            $sku = $product->getSku();
-            $result[$sku] = array();
             try {
                 $imageResult = array();
-                $newImages = array();
-                $swatches = array();
 
                 foreach ($data as $newImage) {
                     try {
-                        $file = $this->_existingImage($existingImageMap, $newImage);
+                        $product = Mage::getModel('catalog/product')->load($productId);
+                        $product->setStoreId(0); //using default store for images import
+                        $gallery = $this->_getGalleryAttribute($product);
+                        $sku = $product->getSku();
+                        if (!isset($result[$sku])) {
+                            $result[$sku] = array();
+                        }
+
+                        $isNewImage = false;
+                        $file = $this->_existingImage($productId, $newImage);
 
                         if (!$file) {
                             $url = $newImage['download_url'];
@@ -202,29 +198,37 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
                                 throw new Exception($remoteCopyError['message']);
                             }
 
-                            // Adding image to gallery
-                            $file = $gallery->getBackend()->addImage(
-                                $product,
-                                $fileName,
-                                null,
-                                true
-                            );
-
-                            $newImages[$file] = $newImage['mediakey'];
-                            $swatches[$file] = $newImage['tag'];
-                            $sequence[$file] = $newImage['sequence'];
-                            $order[$file] = $newImage['position'];
-
-                            // Using mediakey as the existingImageMap key, since we don't have
-                            // the image id and this is good enough for storing the new image info
-                            $existingImageMap[$newImage['mediakey']]
-                                = array( 'mediakey' => $newImage['mediakey'], 'filename' => $file );
+                            // Out of an abundance of caution, make sure that the
+                            // image hasn't been added to product since first check.
+                            // Possible if multiple scripts have kicked off cron jobs.
+                            $recheck_file = $this->_existingImage($productId, $newImage);
+                            if ($recheck_file) {
+                                file_put_contents($errorLogPath, "$sku: Image added to product before download completed\n", FILE_APPEND);
+                                $file = $recheck_file;
+                            }
+                            else {
+                                // Adding image to gallery
+                                $file = $gallery->getBackend()->addImage(
+                                    $product,
+                                    $fileName,
+                                    null,
+                                    true
+                                );
+                                $isNewImage = true;
+                            }
                         }
 
                         $gallery->getBackend()->updateImage($product, $file, $newImage);
                         if (isset($newImage['types'])) {
                             $gallery->getBackend()->setMediaAttribute($product, $newImage['types'], $file);
                         }
+
+                        $product->save();
+                        if ($isNewImage) {
+                            $this->_updateMediaKey($product->getId(), $file, $newImage);
+                        }
+
+                        $product->clearInstance();
                     } catch (Exception $e) {
                         $message = sprintf("Could not process image %s, error message: %s", $newImage['download_url'], $e->getMessage());
                         $imageResult[] = $message;
@@ -234,12 +238,9 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
                 if ($imageResult) {
                     $result[$sku]['images'] = $imageResult;
                 }
-                $product->save();
-                $this->_updateMediaKeys($product->getId(), $newImages, $newImage['color'], $swatches, $sequence, $order);
                 if ($item->getId()) {
                     $item->delete();
                 }
-                $product->clearInstance();
             } catch (Exception $e) {
                 $result[$sku]['general'] = $e->getMessage();
                 file_put_contents($errorLogPath, "{$e->getMessage()}\n", FILE_APPEND);
@@ -456,24 +457,26 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
     /**
      * Get existing image filename, if any, based on mediakey and filename
      *
-     * @param $existingImageMap
-     * @param $imageData
+     * @param $productId
+     * @param $newImageData
      * @return mixed
      */
-    protected function _existingImage($existingImageMap, $imageData)
+    protected function _existingImage($productId, $newImageData)
     {
+        $existingImages = $this->_getResource()->getProductMedia($productId);
+
         // Prioritize mediakeys. Search all existing images for mediakey before considering filename_match.
-        foreach ($existingImageMap as $existingImageData) {
-            if ($imageData['mediakey'] == $existingImageData['mediakey']) {
-                return $existingImageData['filename'];
+        foreach ($existingImages as $existingImage) {
+            if ($newImageData['mediakey'] == $existingImage['retailops_mediakey']) {
+                return $existingImage['value'];
             }
         }
         
-        foreach ($existingImageMap as $existingImageData) {
-            $fileNameMatch = preg_quote($data['filename_match'], '~');
+        foreach ($existingImages as $existingImage) {
+            $fileNameMatch = preg_quote($newImageData['filename_match'], '~');
 
-            if (strlen($fileNameMatch) && preg_grep('~' . $fileNameMatch . '~', $existingImageData['filename'])) {
-                return $existingImageData['filename'];
+            if (strlen($fileNameMatch) && preg_grep('~' . $fileNameMatch . '~', $existingImages['value'])) {
+                return $existingImage['value'];
             }
         }
         
@@ -499,26 +502,24 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
      * Update product's gallery with mediakeys
      *
      * @param $productId
-     * @param $newImages
+     * @param $file
+     * @param $newImage
      */
-    protected function _updateMediaKeys($productId, $newImages, $color, $swatches, $sequence, $order)
+    protected function _updateMediaKey($productId, $file, $newImage)
     {
         $allImages = Mage::getResourceModel('retailops_api/api')->getProductMedia($productId);
         $dataToUpdate = array();
         foreach ($allImages as $image) {
-            if (isset($newImages[$image['value']])) {
-                $dataToUpdate[] = array(
+            if ($image['value'] == $file) {
+                Mage::getResourceModel('retailops_api/api')->updateMediaKeys(array(
                     'value_id' => $image['value_id'],
-                    'retailops_mediakey' => $newImages[$image['value']],
-                    'color' => $color,
-                    'tag' => $swatches[$image['value']],
-                    'sequence' => $sequence[$image['value']],
-                    'position' => $order[$image['value']],                    
-                 );
+                    'retailops_mediakey' => $newImage['mediakey'],
+                    'color' => $newImage['color'],
+                    'tag' => $newImage['tag'],
+                    'sequence' => $newImage['sequence'],
+                    'position' => $newImage['position'],
+                ));
             }
-        }
-        if ($dataToUpdate) {
-            Mage::getResourceModel('retailops_api/api')->updateMediaKeys($dataToUpdate);
         }
     }
 
