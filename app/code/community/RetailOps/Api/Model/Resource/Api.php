@@ -97,6 +97,35 @@ class RetailOps_Api_Model_Resource_Api extends Mage_Core_Model_Resource_Db_Abstr
     }
 
     /**
+     * Get hash of SKUs with non-retrieved qtys
+     *
+     * @param $collection Mage_Sales_Model_Resource_Order_Item_Collection
+     * @return array
+     */
+    public function getRetailopsNonretrievedQtys()
+    {
+        $result = array();
+
+        $collection = $this->getRetailopsNonretrievedOrderItems();
+
+        /* remove parent items */
+        foreach ($collection as $item) {
+            $collection->removeItemByKey($item->getParentItemId());
+        }
+
+        /* calculate total ordered quantity per item */
+        foreach ($collection as $item) {
+            if (isset($result[$item->getSku()])){
+                $result[$item->getSku()] += $item->getQtyOrdered();
+            } else {
+                $result[$item->getSku()] = $item->getQtyOrdered();
+            }
+        }
+
+        return $result;
+    }
+
+    /**
      * Get product's media gallery records
      *
      * @param $productId
@@ -119,5 +148,28 @@ class RetailOps_Api_Model_Resource_Api extends Mage_Core_Model_Resource_Db_Abstr
     {
         $adapter = $this->_getWriteAdapter();
         $adapter->insertOnDuplicate($this->getTable('catalog/product_attribute_media_gallery'), $data);
+    }
+
+    /**
+     * Subtract non-retreived qtys from stock data
+     *
+     * @param $nonretrievedQtys
+     * @param $stockData
+     * @return Varien_Object
+     */
+    public function subtractNonretrievedQtys($nonretrievedQtys, $stockData) {
+        $stockObj = new Varien_Object($stockData);
+
+        $result = array();
+        $result['sku'] = $stockObj->getSku();
+
+        $stockObj->setQty($stockObj->getQuantity()); // api update accepts qty not quantity parameter
+
+        if (isset($nonretrievedQtys[$stockObj->getSku()])) {
+            $qty = $stockObj->getQty() - $nonretrievedQtys[$stockObj->getSku()];
+            $stockObj->setQty($qty);
+        }
+
+        return $stockObj;
     }
 }

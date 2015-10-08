@@ -53,6 +53,13 @@ class RetailOps_Api_Model_Catalog_Adapter_Default extends RetailOps_Api_Model_Ca
 
         $product->setAttributeSetId($attributeSetId);
 
+        if (isset($productData['stock_data']) && is_array($productData['stock_data'])) {
+            $resourceModel = Mage::getResourceModel('retailops_api/api');
+            $orderQtys = $resourceModel->getRetailopsNonretrievedQtys();
+            $stockObj = $resourceModel->subtractNonretrievedQtys($orderQtys, $productData['stock_data']);
+            $productData['stock_data'] = $stockObj->getData();
+        }
+
         if (!$product->getId()) {
             if (empty($productData['type_id'])) {
                 $this->_throwException('Product type is not specified', 'product_type_not_passed');
