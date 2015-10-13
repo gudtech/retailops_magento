@@ -62,7 +62,7 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
                 $order = Mage::getModel('sales/order')->loadByIncrementId($returnObj->getOrderIncrementId());
                 $result = $this->create($order, $returnObj->getCreditmemoData(),
                     $returnObj->getComment(), $returnObj->getNotifyCustomer(), $returnObj->getIncludeComment(),
-                    $returnObj->getRefundToStoreCredit());
+                    $returnObj->getRefundToStoreCredit(), $returnObj->getRefundToRetailopsStoreCredit());
             } catch (Exception $e) {
                 $result['message'] = $e->getMessage();
                 $result['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
@@ -88,7 +88,7 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
      * @return string $creditmemoIncrementId
      */
     public function create($order, $creditmemoData = null, $comment = null, $notifyCustomer = false,
-                           $includeComment = false, $refundToStoreCreditAmount = null)
+        $includeComment = false, $refundToStoreCreditAmount = null, $refundToRetailopsStoreCredit = null)
     {
         /** @var $helper RetailOps_Api_Helper_Data */
         $helper = Mage::helper('retailops_api');
@@ -132,6 +132,9 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
                     // setting flag to make actual refund to customer balance after credit memo save
                     $creditmemo->setCustomerBalanceRefundFlag(true);
                 }
+                $creditmemo->setPaymentRefundDisallowed(true);
+            }
+            if ($refundToRetailopsStoreCredit) {
                 $creditmemo->setPaymentRefundDisallowed(true);
             }
             $creditmemo->register();
