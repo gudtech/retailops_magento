@@ -62,7 +62,7 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
                 $order = Mage::getModel('sales/order')->loadByIncrementId($returnObj->getOrderIncrementId());
                 $result = $this->create($order, $returnObj->getCreditmemoData(),
                     $returnObj->getComment(), $returnObj->getNotifyCustomer(), $returnObj->getIncludeComment(),
-                    $returnObj->getRefundToStoreCredit(), $returnObj->getRefundToRetailopsStoreCredit());
+                    $returnObj->getRefundToStoreCredit(), $returnObj->getRefundedToRetailopsStoreCredit());
             } catch (Exception $e) {
                 $result['message'] = $e->getMessage();
                 $result['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
@@ -88,7 +88,7 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
      * @return string $creditmemoIncrementId
      */
     public function create($order, $creditmemoData = null, $comment = null, $notifyCustomer = false,
-        $includeComment = false, $refundToStoreCreditAmount = null, $refundToRetailopsStoreCredit = null)
+        $includeComment = false, $refundToStoreCreditAmount = null, $refundedToRetailopsStoreCreditAmount = null)
     {
         /** @var $helper RetailOps_Api_Helper_Data */
         $helper = Mage::helper('retailops_api');
@@ -134,7 +134,12 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
                 }
                 $creditmemo->setPaymentRefundDisallowed(true);
             }
-            if ($refundToRetailopsStoreCredit) {
+            if ($refundedToRetailopsStoreCreditAmount) {
+                $ro_refund_message = 'Refunded amount of '
+                                   . $order->getBaseCurrency()->formatTxt($refundedToRetailopsStoreCreditAmount)
+                                   . ' to RetailOps store credit';
+                $order->addStatusHistoryComment($ro_refund_message);
+                $creditmemo->addComment($ro_refund_message, $notifyCustomer);
                 $creditmemo->setPaymentRefundDisallowed(true);
             }
             $creditmemo->register();
