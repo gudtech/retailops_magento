@@ -121,6 +121,9 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                                 if ($shipmentComment->getComment() == $shipmentInfo['comment']) {
                                     $shipmentIncrementId = $orderShipment->getIncrementId();
 
+                                    $orderShipment->setRetailopsShipmentId($shipmentInfo['retailops_shipment_id']);
+                                    $orderShipment->save();
+
                                     break;
                                 }
                             }
