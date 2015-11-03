@@ -44,7 +44,11 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
         $shipmentIncrementId = parent::create($orderIncrementId, $itemsQty, $comment, $email, $includeComment);
 
         if ($retailopsShipmentId && $shipmentIncrementId) {
-            $shipment = Mage::getModel('sales/order_shipment')->loadByIncrementId($shipmentIncrementId);
+            $retry = 10;
+            while ($retry--
+                   && !$shipment = Mage::getModel('sales/order_shipment')->loadByIncrementId($shipmentIncrementId)) {
+                sleep(1);
+            }
 
             if (!$shipment->getId()) {
                 $this->_fault('shipment_not_exists');
