@@ -183,14 +183,6 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
                             if (!$this->_httpFileExists($url)) {
                                 Mage::throwException('Image does not exist.');
                             }
-
-                            // foreach($this->_mediaKeysProcessed as $processed) {
-                            //     if (strpos($processed,$newImage['mediakey']) !== false) {
-                            //         //mage::log(print_r($newImage, true), null, 'keysprocessed.log');
-                            //         continue;
-                            //     }
-                            // }
-
                             $fileName = $this->_getFileName($url, $newImage['mediakey']);
                             $fileName = $tmpDirectory . DS . $fileName;
                             $ioAdapter->cp($url, $fileName);
@@ -254,7 +246,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
                 }
             } catch (Exception $e) {
                 $result[$sku]['general'] = $e->getMessage();
-                file_put_contents($errorLogPath, "{$e->getMessage()}\n", FILE_APPEND);
+                file_put_contents($errorLogPath, $e->getMessage() . "\n", FILE_APPEND);
             }
         }
 
