@@ -38,36 +38,26 @@ class RetailOps_Api_Model_Inventory_Api extends Mage_CatalogInventory_Model_Stoc
         }
         $response = array();
         $response['records'] = array();
-        $orderItemsCollection = Mage::getResourceModel('retailops_api/api')->getRetailopsNonretrievedOrderItems();
-        $orderItems = $this->filterOrderItems($orderItemsCollection);
+        $resourceModel = Mage::getResourceModel('retailops_api/api');
+        $orderQtys = $resourceModel->getRetailopsNonretrievedQtys();
         $productIds = $this->getProductIds($itemData);
 
         foreach ($itemData as $item) {
             try {
-                $itemObj = new Varien_Object($item);
-
                 Mage::dispatchEvent(
                     'retailops_inventory_push_record',
-                    array('record' => $itemObj)
+                    array('record' => $stockObj)
                 );
 
-                $result = array();
-                $result['sku'] = $itemObj->getSku();
-
-                $itemObj->setQty($itemObj->getQuantity()); // api update accepts qty not quantity parameter
-
-                $qty = $itemObj->getQty();
-                if (isset($orderItems[$itemObj->getSku()])) {
-                    $qty = $itemObj->getQty() - $orderItems[$itemObj->getSku()];
-                }
-                $itemObj->setQty($qty);
+                $stockObj = $resourceModel->subtractNonretrievedQtys($orderQtys, $item);
 
                 Mage::dispatchEvent(
                     'retailops_inventory_push_record_qty_processed',
-                    array('record' => $itemObj)
+                    array('record' => $stockObj)
                 );
 
-                $this->update($productIds[$itemObj->getSku()], $itemObj->getData());
+                $this->update($productIds[$stockObj->getSku()], $stockObj->getData());
+
                 $result['status'] = RetailOps_Api_Helper_Data::API_STATUS_SUCCESS;
             } catch (Mage_Core_Exception $e) {
                 $result['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
@@ -80,33 +70,6 @@ class RetailOps_Api_Model_Inventory_Api extends Mage_CatalogInventory_Model_Stoc
         }
 
         return $response;
-    }
-
-    /**
-     * Removes parent order items from collection
-     *
-     * @param $collection Mage_Sales_Model_Resource_Order_Item_Collection
-     * @return array
-     */
-    public function filterOrderItems(Mage_Sales_Model_Resource_Order_Item_Collection $collection)
-    {
-        $result = array();
-
-        /* remove parent items */
-        foreach ($collection as $item) {
-            $collection->removeItemByKey($item->getParentItemId());
-        }
-
-        /* calculate total ordered quantity per item */
-        foreach ($collection as $item) {
-            if (isset($result[$item->getSku()])){
-                $result[$item->getSku()] += $item->getQtyOrdered();
-            } else {
-                $result[$item->getSku()] = $item->getQtyOrdered();
-            }
-        }
-
-        return $result;
     }
 
     /**
