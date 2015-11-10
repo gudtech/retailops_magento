@@ -150,7 +150,6 @@ class RetailOps_Api_Model_Resource_Api extends Mage_Core_Model_Resource_Db_Abstr
         if(!isset($productId)) { return array(); }
         $select = $this->_getReadAdapter()->select()->from($this->getTable('catalog/product_attribute_media_gallery'))
             ->where('entity_id = ?', $productId);
-
         return $this->_getReadAdapter()->fetchAll($select);
     }
 
