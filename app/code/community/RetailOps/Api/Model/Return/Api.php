@@ -138,10 +138,11 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
             if ($refundedToRetailopsStoreCredit || $refundedOffline) {
                 $ro_refund_message = 'Refunded amount of '
                     . $order->getBaseCurrency()->formatTxt($creditmemo->getBaseGrandTotal())
-                    . ($refundedOffline ? ' offline' : ' to RetailOps store credit');
+                    . ($refundedOffline ? ' offline.' : ' to RetailOps store credit.');
                 $order->addStatusHistoryComment($ro_refund_message);
                 $creditmemo->addComment($ro_refund_message, $notifyCustomer);
                 $creditmemo->setPaymentRefundDisallowed(true);
+                $creditmemo->setOfflineRequested(true);
             }
             $creditmemo->register();
             // add comment to creditmemo
