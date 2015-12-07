@@ -60,7 +60,7 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
                     array('record' => $returnObj)
                 );
                 $order = Mage::getModel('sales/order')->loadByIncrementId($returnObj->getOrderIncrementId());
-                $result = $this->create($order, $returnObj->getCreditmemoData(),
+                $result = $this->create($order, $returnObj->getCreditmemoData(), $returnObj->getRefundedOffline(),
                     $returnObj->getComment(), $returnObj->getNotifyCustomer(), $returnObj->getIncludeComment(),
                     $returnObj->getRefundToStoreCredit(), $returnObj->getRefundedToRetailopsStoreCredit());
             } catch (Exception $e) {
@@ -87,8 +87,9 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
      * @param string $refundToStoreCreditAmount
      * @return string $creditmemoIncrementId
      */
-    public function create($order, $creditmemoData = null, $comment = null, $notifyCustomer = false,
-        $includeComment = false, $refundToStoreCreditAmount = null, $refundedToRetailopsStoreCreditAmount = null)
+    public function create($order, $creditmemoData = null, $refundedOffline = false,
+        $comment = null, $notifyCustomer = false, $includeComment = false,
+        $refundToStoreCreditAmount = null, $refundedToRetailopsStoreCredit = null)
     {
         /** @var $helper RetailOps_Api_Helper_Data */
         $helper = Mage::helper('retailops_api');
@@ -134,10 +135,10 @@ class RetailOps_Api_Model_Return_Api extends Mage_Sales_Model_Order_Creditmemo_A
                 }
                 $creditmemo->setPaymentRefundDisallowed(true);
             }
-            if ($refundedToRetailopsStoreCreditAmount) {
+            if ($refundedToRetailopsStoreCredit || $refundedOffline) {
                 $ro_refund_message = 'Refunded amount of '
-                                   . $order->getBaseCurrency()->formatTxt($refundedToRetailopsStoreCreditAmount)
-                                   . ' to RetailOps store credit';
+                    . $order->getBaseCurrency()->formatTxt($creditmemo->getBaseGrandTotal())
+                    . ($refundedOffline ? ' offline' : ' to RetailOps store credit');
                 $order->addStatusHistoryComment($ro_refund_message);
                 $creditmemo->addComment($ro_refund_message, $notifyCustomer);
                 $creditmemo->setPaymentRefundDisallowed(true);

@@ -238,6 +238,7 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                             $invoiceResult = $this->_createInvoiceAndCapture(
                                     $order,
                                     $invoice->getItemsToInvoice(),
+                                    $invoice->getCapturedOffline(),
                                     $invoice->getComment(),
                                     $invoice->getEmail(),
                                     $invoice->getIncludeComment()
@@ -319,10 +320,10 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                         }
                     }
                     if ($itemsToCapture) {
-                        $result['invoice_result'] = $this->_createInvoiceAndCapture($order, $itemsToCapture);
+                        $result['invoice_result'] = $this->_createInvoiceAndCapture($order, $itemsToCapture, $orderData['captured_offline']);
                     }
                     if ($itemsToReturn) {
-                        $result['creditmemo_result'] = $this->_getCreditMemoApi()->create($order, array('qtys' => $itemsToReturn));
+                        $result['creditmemo_result'] = $this->_getCreditMemoApi()->create($order, array('qtys' => $itemsToReturn), $orderData['captured_offline']);
                     }
                     /**
                      * Cancel the rest items if any
@@ -362,7 +363,7 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
      * @param bool $includeComment
      * @return string
      */
-    protected function _createInvoiceAndCapture($order, $itemsQty, $comment = null, $email = false, $includeComment = false)
+    protected function _createInvoiceAndCapture($order, $itemsQty, $capturedOffline = false, $comment = null, $email = false, $includeComment = false)
     {
         /** @var $helper RetailOps_Api_Helper_Data */
         $helper = Mage::helper('retailops_api');
@@ -374,7 +375,8 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                 }
             }
             $invoice = $order->prepareInvoice($itemsQtyFomratted);
-            $invoice->setRequestedCaptureCase(Mage_Sales_Model_Order_Invoice::CAPTURE_ONLINE);
+            $invoice->setRequestedCaptureCase($capturedOffline
+                ? Mage_Sales_Model_Order_Invoice::CAPTURE_OFFLINE : Mage_Sales_Model_Order_Invoice::CAPTURE_ONLINE);
             $invoice->register();
 
             if ($comment !== null) {
