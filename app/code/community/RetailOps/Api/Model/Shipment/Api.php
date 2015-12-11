@@ -41,23 +41,37 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
     public function create($orderIncrementId, $itemsQty = array(), $comment = null, $email = false,
         $includeComment = false, $retailopsShipmentId = null
     ) {
+try {
+Mage::log(__METHOD__ . ', Order #' . $orderIncrementId . ', RO Shipment ID ' . $retailopsShipmentId, null, 'roshipment.log', true);
+Mage::log("ARGS: \n" . var_export(func_get_args(), true), null, 'roshipment.log', true);
+
         $shipmentIncrementId = parent::create($orderIncrementId, $itemsQty, $comment, $email, $includeComment);
 
+Mage::log('Acquired shipment ID: ' . $shipmentIncrementId, null, 'roshipment.log', true);
         if ($retailopsShipmentId && $shipmentIncrementId) {
+            $shipment = Mage::getModel('sales/order_shipment')->loadByIncrementId($shipmentIncrementId);
             $retry = 10;
             while ($retry--
                    && !$shipment = Mage::getModel('sales/order_shipment')->loadByIncrementId($shipmentIncrementId)) {
                 sleep(1);
             }
-
+            
+Mage::log('Shipment model loaded', null, 'roshipment.log', true);
             if (!$shipment->getId()) {
+Mage::log('SHIPMENT MODEL ID LOST FOR ' . $shipmentIncrementId, null, 'roshipment.log', true);
                 $this->_fault('shipment_not_exists');
             }
 
             $shipment->setRetailopsShipmentId($retailopsShipmentId);
             $shipment->save();
+Mage::log('Shipment record saved', null, 'roshipment.log', true);
+Mage::log('Final data:' . "\n" . var_export($shipment->getData(), true), null, 'roshipment.log', true);
         }
-
+} catch(Exception $error) {
+Mage::logException($error);
+Mage::log('ERROR:' . "\n" . $error->getMessage(), null, 'roshipment.log', true);
+throw $error;
+}
         return $shipmentIncrementId;
     }
 
@@ -113,6 +127,9 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                                 && $retailopsShipmentId == $shipmentInfo['retailops_shipment_id']) {
                                 $shipmentIncrementId = $orderShipment->getIncrementId();
 
+                                $orderShipment->setRetailopsShipmentId($shipmentInfo['retailops_shipment_id']);
+                                $orderShipment->save();
+                                    
                                 break;
                             }
 
@@ -120,9 +137,6 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                             foreach ($shipmentComments as $shipmentComment) {
                                 if ($shipmentComment->getComment() == $shipmentInfo['comment']) {
                                     $shipmentIncrementId = $orderShipment->getIncrementId();
-
-                                    $orderShipment->setRetailopsShipmentId($shipmentInfo['retailops_shipment_id']);
-                                    $orderShipment->save();
 
                                     break;
                                 }
