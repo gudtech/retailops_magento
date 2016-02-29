@@ -162,7 +162,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
                             if (!$this->_httpFileExists($url)) {
                                 Mage::throwException('Image does not exist.');
                             }
-                            $fileName = $this->_getFileName($url, $newImage['mediakey']);
+                            $fileName = $this->_getFileName($url, $newImage);
                             $fileName = $tmpDirectory . DS . $fileName;
                             $ioAdapter->cp($url, $fileName);
 
@@ -365,15 +365,22 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
      * Get filename of uploaded file
      *
      * @param string $url
-     * @param string $mediakey
+     * @param string $media_data
      * @return string $filename
      */
-    protected function _getFileName($url, $mediakey)
+    protected function _getFileName($url, $media_data)
     {
-        $fileName  = Varien_File_Uploader::getCorrectFileName(basename($url));
-        $fileName = trim($fileName, '_');
+        if (isset($media_data['file'])
+            && isset($media_data['file']['name'])
+            && strlen($media_data['file']['name'])
+        ) {
+            $fileName = $media_data['file']['name'];
+        }
+        else {
+            $fileName = Varien_File_Uploader::getCorrectFileName(basename($url));
+        }
 
-        return $fileName;
+        return trim($fileName, '_');
     }
 
     /**
