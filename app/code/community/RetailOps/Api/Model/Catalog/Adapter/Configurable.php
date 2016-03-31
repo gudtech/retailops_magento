@@ -102,7 +102,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Configurable extends RetailOps_Api_Mod
                     }
                     $assignedProducts = $configurable->getTypeInstance()->getUsedProductIds($configurable);
                     if (!empty($childIds['add'])) {
-                        $assignedProducts = array_merge($assignedProducts, $childIds['add']);
+                        $assignedProducts = array_merge($assignedProducts, array_diff($childIds['add'], $assignedProducts));
                     }
                     if (!empty($childIds['remove'])) {
                         $assignedProducts = array_diff($assignedProducts, $childIds['remove']);
