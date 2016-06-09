@@ -1,6 +1,8 @@
 This software is licensed under the GNU Affero General Public License shown below.
 Copyright (c) 2015, 2016 Gud Technologies Incorporated (RetailOps by güdTECH)
 
+In addition to the AGPL license text, this exeption to the AGPL conditions applies to this software:
+As a special exemption to the GNU Affero General Public License, a complilation of a coverd work that is combined with it such as to form a larger program will be considered an aggregate.  Inclusion of this work within an aggregate will not cause this License to apply to the other parts of the aggregate.
 
                     GNU AFFERO GENERAL PUBLIC LICENSE
                        Version 3, 19 November 2007
