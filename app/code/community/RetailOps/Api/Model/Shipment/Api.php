@@ -41,37 +41,19 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
     public function create($orderIncrementId, $itemsQty = array(), $comment = null, $email = false,
         $includeComment = false, $retailopsShipmentId = null
     ) {
-try {
-Mage::log(__METHOD__ . ', Order #' . $orderIncrementId . ', RO Shipment ID ' . $retailopsShipmentId, null, 'roshipment.log', true);
-Mage::log("ARGS: \n" . var_export(func_get_args(), true), null, 'roshipment.log', true);
-
         $shipmentIncrementId = parent::create($orderIncrementId, $itemsQty, $comment, $email, $includeComment);
 
-Mage::log('Acquired shipment ID: ' . $shipmentIncrementId, null, 'roshipment.log', true);
         if ($retailopsShipmentId && $shipmentIncrementId) {
             $shipment = Mage::getModel('sales/order_shipment')->loadByIncrementId($shipmentIncrementId);
-            $retry = 10;
-            while ($retry--
-                   && !$shipment = Mage::getModel('sales/order_shipment')->loadByIncrementId($shipmentIncrementId)) {
-                sleep(1);
-            }
-            
-Mage::log('Shipment model loaded', null, 'roshipment.log', true);
+
             if (!$shipment->getId()) {
-Mage::log('SHIPMENT MODEL ID LOST FOR ' . $shipmentIncrementId, null, 'roshipment.log', true);
                 $this->_fault('shipment_not_exists');
             }
 
             $shipment->setRetailopsShipmentId($retailopsShipmentId);
             $shipment->save();
-Mage::log('Shipment record saved', null, 'roshipment.log', true);
-Mage::log('Final data:' . "\n" . var_export($shipment->getData(), true), null, 'roshipment.log', true);
         }
-} catch(Exception $error) {
-Mage::logException($error);
-Mage::log('ERROR:' . "\n" . $error->getMessage(), null, 'roshipment.log', true);
-throw $error;
-}
+
         return $shipmentIncrementId;
     }
 
@@ -127,9 +109,6 @@ throw $error;
                                 && $retailopsShipmentId == $shipmentInfo['retailops_shipment_id']) {
                                 $shipmentIncrementId = $orderShipment->getIncrementId();
 
-                                $orderShipment->setRetailopsShipmentId($shipmentInfo['retailops_shipment_id']);
-                                $orderShipment->save();
-                                    
                                 break;
                             }
 
@@ -181,51 +160,52 @@ throw $error;
                 }
                 $result['shipment_result'] = $shipmentResult ? array($shipmentResult) : array();
 
-                if ($shipmentIncrementId) {
+                if ($shipmentIncrementId && is_bool($shipmentIncrementId) === false) {
                     if ($trackInfo) {
                         $existingShipmentInfo = Mage::getModel('sales/order_shipment_api')->info($shipmentIncrementId);
+                        if ($existingShipmentInfo && is_bool($existingShipmentInfo) === false) {
+                            $result['track_result'] = array();
+                            foreach ($trackInfo as $track) {
+                                // add shipment track
+                                try {
+                                    $trackResult = array();
+                                    $track = new Varien_Object($track);
 
-                        $result['track_result'] = array();
-                        foreach ($trackInfo as $track) {
-                            // add shipment track
-                            try {
-                                $trackResult = array();
-                                $track = new Varien_Object($track);
+                                    $trackId = null;
+                                    foreach ($existingShipmentInfo['tracks'] as $existingTrack) {
+                                        if ($existingTrack['track_number'] == $track->getData('track_number')) {
+                                            $trackId = $existingTrack['track_id'];
 
-                                $trackId = null;
-                                foreach ($existingShipmentInfo['tracks'] as $existingTrack) {
-                                    if ($existingTrack['track_number'] == $track->getData('track_number')) {
-                                        $trackId = $existingTrack['track_id'];
-
-                                        break;
+                                            break;
+                                        }
                                     }
+
+                                    if ($trackId) {
+                                        continue;
+                                    }
+
+                                    Mage::dispatchEvent(
+                                        'retailops_shipment_add_track_before',
+                                        array('record' => $track)
+                                    );
+                                    $trackResult['track_number'] = $track->getData('track_number');
+
+                                    $trackId = $this->addTrack($shipmentIncrementId,
+                                        $track->getData('carrier'),
+                                        $track->getData('title'),
+                                        $track->getData('track_number')
+                                    );
+
+                                    $trackResult['status'] = RetailOps_Api_Helper_Data::API_STATUS_SUCCESS;
+                                    $trackResult['track_id'] = $trackId;
+                                } catch (Mage_Core_Exception $e) {
+                                    $trackResult['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
+                                    $trackResult['message'] = $e->getMessage();
+                                    $trackResult['stack_trace'] = $e->getTraceAsString();
+                                    $trackResult['request_params'] = $this->_requestParams;
                                 }
-
-                                if ($trackId) {
-                                    continue;
-                                }
-
-                                Mage::dispatchEvent(
-                                    'retailops_shipment_add_track_before',
-                                    array('record' => $track)
-                                );
-                                $trackResult['track_number'] = $track->getData('track_number');
-
-                                $trackId = $this->addTrack($shipmentIncrementId,
-                                    $track->getData('carrier'),
-                                    $track->getData('title'),
-                                    $track->getData('track_number')
-                                );
-
-                                $trackResult['status'] = RetailOps_Api_Helper_Data::API_STATUS_SUCCESS;
-                                $trackResult['track_id'] = $trackId;
-                            } catch (Mage_Core_Exception $e) {
-                                $trackResult['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
-                                $trackResult['message'] = $e->getMessage();
-                                $trackResult['stack_trace'] = $e->getTraceAsString();
-                                $trackResult['request_params'] = $this->_requestParams;
+                                $result['track_result'][] = $trackResult;
                             }
-                            $result['track_result'][] = $trackResult;
                         }
                     }
 
@@ -259,6 +239,7 @@ throw $error;
                             $invoiceResult = $this->_createInvoiceAndCapture(
                                     $order,
                                     $invoice->getItemsToInvoice(),
+                                    $invoice->getCapturedOffline(),
                                     $invoice->getComment(),
                                     $invoice->getEmail(),
                                     $invoice->getIncludeComment()
@@ -340,10 +321,10 @@ throw $error;
                         }
                     }
                     if ($itemsToCapture) {
-                        $result['invoice_result'] = $this->_createInvoiceAndCapture($order, $itemsToCapture);
+                        $result['invoice_result'] = $this->_createInvoiceAndCapture($order, $itemsToCapture, $orderData['captured_offline']);
                     }
                     if ($itemsToReturn) {
-                        $result['creditmemo_result'] = $this->_getCreditMemoApi()->create($order, array('qtys' => $itemsToReturn));
+                        $result['creditmemo_result'] = $this->_getCreditMemoApi()->create($order, array('qtys' => $itemsToReturn), $orderData['captured_offline']);
                     }
                     /**
                      * Cancel the rest items if any
@@ -383,7 +364,7 @@ throw $error;
      * @param bool $includeComment
      * @return string
      */
-    protected function _createInvoiceAndCapture($order, $itemsQty, $comment = null, $email = false, $includeComment = false)
+    protected function _createInvoiceAndCapture($order, $itemsQty, $capturedOffline = false, $comment = null, $email = false, $includeComment = false)
     {
         /** @var $helper RetailOps_Api_Helper_Data */
         $helper = Mage::helper('retailops_api');
@@ -395,7 +376,8 @@ throw $error;
                 }
             }
             $invoice = $order->prepareInvoice($itemsQtyFomratted);
-            $invoice->setRequestedCaptureCase(Mage_Sales_Model_Order_Invoice::CAPTURE_ONLINE);
+            $invoice->setRequestedCaptureCase($capturedOffline
+                ? Mage_Sales_Model_Order_Invoice::CAPTURE_OFFLINE : Mage_Sales_Model_Order_Invoice::CAPTURE_ONLINE);
             $invoice->register();
 
             if ($comment !== null) {

@@ -169,7 +169,7 @@ class RetailOps_Api_Model_Catalog_Push_Api extends RetailOps_Api_Model_Catalog_A
         $result['records'] = array();
         $processedSkus = array();
         try {
-            //$this->_stopReindex();
+//            $this->_stopReindex();
             $this->beforeDataPrepare();
             foreach ($productsData as $key => $data) {
                 try {
@@ -191,13 +191,17 @@ class RetailOps_Api_Model_Catalog_Push_Api extends RetailOps_Api_Model_Catalog_A
                     $dataObj = new Varien_Object($data);
                     Mage::dispatchEvent('retailops_catalog_push_data_process_before', array('data' => $dataObj));
                     $data = $dataObj->getData();
+                    if (isset($data['url_key']))
+                    {
+                        $data['save_rewrites_history'] = true;
+                    }
                     $this->processData($data);
                 } catch (RetailOps_Api_Model_Catalog_Exception $e) {
                     $this->_addError($e);
                 }
             }
             $this->afterDataProcess();
-            //$this->_startReindex();
+//            $this->_startReindex();
         } catch (Exception $e) {
             $this->_addError(new RetailOps_Api_Model_Catalog_Exception($e->getMessage()));
         }

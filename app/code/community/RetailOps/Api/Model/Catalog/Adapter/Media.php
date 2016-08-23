@@ -36,8 +36,6 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
 
     protected $_mediaDataToSave = array();
     protected $_straightMediaProcessing = false;
-    protected $_colors = array();
-    protected $_configurableAllMediaData = array();
 
     protected function _construct()
     {
@@ -57,45 +55,18 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
         if ($product->getId() && (!isset($productData['unset_other_media']) || $productData['unset_other_media'])) {
             $this->clearProductGallery($product);
         }
-        
-        if(isset($productData['attributes'])) {
-            foreach($productData['attributes'] as $attributes) {
-                if(strtolower($attributes['attribute_code']) == "color") {
-                    if($attributes['value']) {
-                        $color = $attributes['value'];
-                    }
-                    break;
-                }
-            }
-        }
 
         if (isset($productData['media'])) {
             $allMediaData = array();
-            $colors = array();
-
-            $configSku = $productData['configurable_sku'][0];
             foreach ($productData['media'] as $mediaData) {
                 $mediaData = new Varien_Object($mediaData);
-                $mediaData->setColor($color);
-
-                if($mediaData['position'] == '1') { $mediaData->setTag('base'); }
-                if($mediaData['position'] == '2') { $mediaData->setTag('rollover'); }
-                if($productData['sequence']) { $mediaData->setSequence($productData['sequence']); }
 
                 Mage::dispatchEvent('retailops_catalog_media_process_before',
                     array('media_data' => $mediaData));
 
-                $thisMediaData = $mediaData->getData();
-                $allMediaData[] = $thisMediaData;
-                if ($configSku) {
-                    if (!isset($this->_configurableAllMediaData[$configSku])) {
-                        $this->_configurableAllMediaData[$configSku] = array();
-                    }
-                    $this->_configurableAllMediaData[$configSku][] = $thisMediaData;
-                }
+                $allMediaData[] = $mediaData->getData();
             }
-
-            $this->_mediaDataToSave[$productData['sku']] = $allMediaData;
+            $this->_mediaDataToSave[$productData['sku']] = json_encode($allMediaData);
         }
         if (isset($productData['straight_media_process']) && $productData['straight_media_process']) {
             $this->_straightMediaProcessing = true;
@@ -108,8 +79,19 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
      */
     public function afterDataProcess(array &$skuToIdMap)
     {
-        $this->_processMediaToSave($this->_mediaDataToSave, $skuToIdMap);
-        $this->_processMediaToSave($this->_configurableAllMediaData, $skuToIdMap);
+        if ($this->_mediaDataToSave) {
+            foreach ($this->_mediaDataToSave as $sku => $data) {
+                $productId = $skuToIdMap[$sku];
+                $dataToSave['media_data'] = $data;
+                $dataToSave['product_id'] = $productId;
+                $item = Mage::getModel('retailops_api/catalog_media_item')->setData($dataToSave);
+                if (!$this->_straightMediaProcessing) {
+                    $item->save();
+                } else {
+                    $this->downloadProductImages($item);
+                }
+            }
+        }
     }
 
     /**
@@ -138,8 +120,6 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
      */
     public function downloadProductImages($item = null)
     {
-        $pid = getmypid();
-    file_put_contents('/tmp/retailops_magento_image_debug.log', "\npid $pid start: " . date('r') . "\n", FILE_APPEND);
         $ioAdapter = new Varien_Io_File();
         $tmpDirectory = Mage::getBaseDir('var') . DS . 'api' . DS . uniqid();
         $ioAdapter->checkAndCreateFolder($tmpDirectory);
@@ -153,18 +133,11 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
                 $limit = self::CRON_DOWNLOAD_LIMIT;
             }
             $items->getSelect()->limit($limit);
-        file_put_contents('/tmp/retailops_magento_image_debug.log', "pid $pid Retrieved " . count($items) . " items: ", FILE_APPEND);
-        foreach ($items as $i) {
-            //file_put_contents('/tmp/retailops_magento_image_debug.log', $i->getId() . ',', FILE_APPEND);
-        }
-        //file_put_contents('/tmp/retailops_magento_image_debug.log', "\n", FILE_APPEND);
-        reset($items);
         } else {
             $items = array($item);
         }
         $result = array();
         /** @var $item RetailOps_Api_Model_Catalog_Media_Item */
-    file_put_contents('/tmp/retailops_magento_image_debug.log', "pid $pid processing items\n", FILE_APPEND);
         foreach ($items as $item) {
             $productId = $item->getProductId();
             $data = json_decode($item->getMediaData(), true);
@@ -173,8 +146,6 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
 
                 foreach ($data as $newImage) {
                     try {
-              file_put_contents('/tmp/retailops_magento_image_debug.log', "pid $pid, prod_id $productId new image: " . var_export($newImage, TRUE) . "\n", FILE_APPEND);
-
                         $product = Mage::getModel('catalog/product')->load($productId);
                         $product->setStoreId(0); //using default store for images import
                         $gallery = $this->_getGalleryAttribute($product);
@@ -183,22 +154,18 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
                             $result[$sku] = array();
                         }
 
-              file_put_contents('/tmp/retailops_magento_image_debug.log', "pid $pid, prod_id $productId sku $sku\n", FILE_APPEND);
                         $isNewImage = false;
                         $file = $this->_existingImage($productId, $newImage);
 
-              file_put_contents('/tmp/retailops_magento_image_debug.log', "pid $pid, prod_id $productId existing file: $file\n", FILE_APPEND);
                         if (!$file) {
                             $url = $newImage['download_url'];
                             if (!$this->_httpFileExists($url)) {
                                 Mage::throwException('Image does not exist.');
                             }
-                            $fileName = $this->_getFileName($url, $newImage['mediakey']);
+                            $fileName = $this->_getFileName($url, $newImage);
                             $fileName = $tmpDirectory . DS . $fileName;
                             $ioAdapter->cp($url, $fileName);
 
-                            $color_id = $this->_getOptionId('color', $newImage['color']);
-                            
                             $retry = 0;
                             $remoteCopySuccess = false;
                             while ($retry++ < $remoteCopyRetryLimit && !$remoteCopySuccess) {
@@ -216,7 +183,6 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
                             // Possible if multiple scripts have kicked off cron jobs.
                             $recheck_file = $this->_existingImage($productId, $newImage);
                             if ($recheck_file) {
-                  file_put_contents('/tmp/retailops_magento_image_debug.log', "pid $pid, prod_id $productId existing image found on recheck $recheck_file\n", FILE_APPEND);
                                 file_put_contents($errorLogPath, "$sku: Image added to product before download completed\n", FILE_APPEND);
                                 $file = $recheck_file;
                             }
@@ -228,7 +194,6 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
                                     null,
                                     true
                                 );
-                  file_put_contents('/tmp/retailops_magento_image_debug.log', "pid $pid, prod_id $productId added image to gallery file\n", FILE_APPEND);
                                 $isNewImage = true;
                             }
                         }
@@ -238,20 +203,10 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
                             $gallery->getBackend()->setMediaAttribute($product, $newImage['types'], $file);
                         }
 
-            $existingImages1 = $this->_getResource()->getProductMedia($productId);
-            //file_put_contents('/tmp/retailops_magento_image_debug.log', "pid $pid, prod_id $productId existing images before save " . var_export($existingImages1, TRUE) . "\n", FILE_APPEND);
-
                         $product->save();
-
-            $existingImages2 = $this->_getResource()->getProductMedia($productId);
-            //file_put_contents('/tmp/retailops_magento_image_debug.log', "pid $pid, prod_id $productId existing images after save " . var_export($existingImages2, TRUE) . "\n", FILE_APPEND);
-
                         if ($isNewImage) {
                             $this->_updateMediaKey($product->getId(), $file, $newImage);
                         }
-
-            $existingImages3 = $this->_getResource()->getProductMedia($productId);
-            //file_put_contents('/tmp/retailops_magento_image_debug.log', "pid $pid, prod_id $productId existing images after update media key " . var_export($existingImages3, TRUE) . "\n", FILE_APPEND);
 
                         $product->clearInstance();
                     } catch (Exception $e) {
@@ -268,136 +223,15 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
                 }
             } catch (Exception $e) {
                 $result[$sku]['general'] = $e->getMessage();
-                file_put_contents($errorLogPath, $e->getMessage() . "\n", FILE_APPEND);
+                file_put_contents($errorLogPath, "{$e->getMessage()}\n", FILE_APPEND);
             }
         }
-
-        // Apply CJM dropdown values
-        $this->_applyCjmValues($items);
 
         // Remove temporary directory
         $ioAdapter->rmdir($tmpDirectory, true);
 
-      file_put_contents('/tmp/retailops_magento_image_debug.log', "pid $pid finish: " . date('r') . "\n", FILE_APPEND);
-
         return $result;
     }
-
-    /**
-     * Apply CJM Color Swatch values to new downloaded images
-     * 
-     * @param Varien_Object|null $item
-     */
-    protected function _applyCjmValues($items) 
-    {
-        
-        $cjmImageswitcher = array();
-        $cjmMouseover = array();
-        $cjmMoreviews = array();
-        $colors = array();
-        $count = 0;
-
-        foreach ($items as $item) {
-            $productId = $item->getProductId();
-            $product = Mage::getModel('catalog/product')->load($productId);
-            $product->setStoreId(0); 
-            $gallery = $this->_getGalleryAttribute($product);
-            $allImages = $this->_getResource()->getProductEntityMedia($productId);
-
-            foreach($allImages as $image) {
-
-                unset($base);
-                unset($rollover);
-
-	  try {
-
-                // update image type radio buttons based on sequence and tags
-                if($image['sequence'] === "1" && $image['tag'] == 'base') {
-                    $base = array('image'=>$image['value'], 'thumbnail'=>$image['value'], 'small_image'=>$image['value']);
-                    //Mage::getSingleton('catalog/product_action')->updateAttributes(array($product->getId()), $base, 0);
-                    
-                    $product->setImage($image['value']);
-                    $product->setThumbnail($image['value']);
-                    $product->setSmallImage($image['value']);
-                    $product->getResource()->saveAttribute($product, 'image');
-                    $product->getResource()->saveAttribute($product, 'thumbnail');
-                    $product->getResource()->saveAttribute($product, 'small_image');
-
-                } elseif($image['sequence'] === "1" && $image['tag'] == 'rollover') {
-                    $rollover = array('over_image'=>$image['value']);
-                    //Mage::getSingleton('catalog/product_action')->updateAttributes(array($product->getId()), $rollover, 0);
-
-                    $product->setOverImage($image['value']);
-                    $product->getResource()->saveAttribute($product, 'over_image');
-                }
-
-                // update position
-                $gallery->getBackend()->updateImage(
-                    $product,
-                    $image['value'],
-                    array('position' => $image['position'])
-                );
-                $product->getResource()->saveAttribute($product, 'media_gallery');
-
-            } catch (Exception $e) {
-                Mage::logException($e);
-            }
-
-                // update CJM dropdown color values
-                $color = $image['color'];
-                $tag = $image['tag'];
-                $valueId = $image['value_id'];
-                $colorId = $this->_getOptionId("color", $color);
-
-                $cjmMoreviews[$valueId] = $colorId;
-
-                if (strpos($tag,'base') !== false) {
-                    $cjmImageswitcher[$valueId] = $colorId;
-                } else {
-                    $cjmImageswitcher[$valueId] = '';
-                }
-                if (strpos($tag,'rollover') !== false) {
-                    $cjmMouseover[$valueId] = $colorId;
-                } else {
-                    $cjmMouseover[$valueId] = '';
-                }
-
-            }
-
-            $product->setCjmImageswitcher(serialize($cjmImageswitcher));
-            $product->setCjmMoreviews(serialize($cjmMoreviews));
-            $product->setCjmMouseover(serialize($cjmMouseover));
-
-            try {
-                $product->save();
-            } catch (Exception $e) {
-                Mage::logException($e);
-            }
-        }
-    }
-
-    /**
-     * Save media data collected in processData and save to DB
-     *
-     * @param Array $mediaToSave
-     * @param Array $skuIdToMap
-     */
-    protected function _processMediaToSave($mediaToSave, $skuToIdMap) {
-        if ($mediaToSave) {
-            foreach ($mediaToSave as $sku => $data) {
-                $productId = $skuToIdMap[$sku];
-                $dataToSave['media_data'] = json_encode($data);
-                $dataToSave['product_id'] = $productId;
-                $item = Mage::getModel('retailops_api/catalog_media_item')->setData($dataToSave);
-                if (!$this->_straightMediaProcessing) {
-                    $item->save();
-                } else {
-                    $this->downloadProductImages($item);
-                }
-            }
-        }
-    }
-
 
     /**
      * @param Mage_Catalog_Model_Product $product
@@ -508,13 +342,10 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
     protected function _existingImage($productId, $newImageData)
     {
         $existingImages = $this->_getResource()->getProductMedia($productId);
-    //file_put_contents('/tmp/retailops_magento_image_debug.log', "prod_id $productId existing images " . var_export($existingImages, TRUE) . "\n", FILE_APPEND);
-    //file_put_contents('/tmp/retailops_magento_image_debug.log', "prod_id $productId new image data " . var_export($newImageData, TRUE) . "\n", FILE_APPEND);
 
         // Prioritize mediakeys. Search all existing images for mediakey before considering filename_match.
         foreach ($existingImages as $existingImage) {
             if ($newImageData['mediakey'] == $existingImage['retailops_mediakey']) {
-            file_put_contents('/tmp/retailops_magento_image_debug.log', "prod_id $productId found by mediakey " . $newImageData['mediakey'] . "\n", FILE_APPEND);
                 return $existingImage['value'];
             }
         }
@@ -523,7 +354,6 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
             $fileNameMatch = preg_quote($newImageData['filename_match'], '~');
 
             if (strlen($fileNameMatch) && preg_grep('~' . $fileNameMatch . '~', $existingImages['value'])) {
-            file_put_contents('/tmp/retailops_magento_image_debug.log', "prod_id $productId found by filename match " . $existingImages['value'] . "\n", FILE_APPEND);
                 return $existingImage['value'];
             }
         }
@@ -535,15 +365,22 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
      * Get filename of uploaded file
      *
      * @param string $url
-     * @param string $mediakey
+     * @param string $media_data
      * @return string $filename
      */
-    protected function _getFileName($url, $mediakey)
+    protected function _getFileName($url, $media_data)
     {
-        $fileName  = Varien_File_Uploader::getCorrectFileName(basename($url));
-        $fileName = trim($fileName, '_');
+        if (isset($media_data['file'])
+            && isset($media_data['file']['name'])
+            && strlen($media_data['file']['name'])
+        ) {
+            $fileName = $media_data['file']['name'];
+        }
+        else {
+            $fileName = Varien_File_Uploader::getCorrectFileName(basename($url));
+        }
 
-        return $fileName;
+        return trim($fileName, '_');
     }
 
     /**
@@ -559,14 +396,9 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
         $dataToUpdate = array();
         foreach ($allImages as $image) {
             if ($image['value'] == $file) {
-          //file_put_contents('/tmp/retailops_magento_image_debug.log', "$productId updating media key with value_id: " . $image['value_id'] . " attrs: " . var_export($newImage, TRUE) . "\n", FILE_APPEND);
                 Mage::getResourceModel('retailops_api/api')->updateMediaKeys(array(
                     'value_id' => $image['value_id'],
                     'retailops_mediakey' => $newImage['mediakey'],
-                    'color' => $newImage['color'],
-                    'tag' => $newImage['tag'],
-                    'sequence' => $newImage['sequence'],
-                    'position' => $newImage['position'],
                 ));
             }
         }
@@ -589,33 +421,4 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
 
         return $attributes[self::ATTRIBUTE_CODE];
     }
-
-    /**
-    * Case sensitive option ID lookup by attribute label
-    *
-    * @param string $attribute_code
-    * @param string $label
-    * @return string Option ID
-    */
-    protected function _getOptionId($attribute_code, $label)
-    {
-        $attribute_model = Mage::getModel('eav/entity_attribute');
-        $attribute_options_model= Mage::getModel('eav/entity_attribute_source_table') ;
-        $attribute_code = $attribute_model->getIdByCode('catalog_product', $attribute_code);
-        $attribute = $attribute_model->load($attribute_code);
-
-        $attribute_table = $attribute_options_model->setAttribute($attribute);
-        $options = $attribute_options_model->getAllOptions(false);
-
-        foreach($options as $option)
-        {
-            if ($option['label'] == $label)
-            {
-                $optionId = $option['value'];
-                break;
-            }
-        }
-        return $optionId;
-    }
-
 }

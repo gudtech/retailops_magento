@@ -33,7 +33,7 @@ class RetailOps_Api_Model_Observer
     public function updateRetailopsStatus($observer)
     {
         $order = $observer->getEvent()->getPayment()->getOrder();
-        $order->setRetailopsStatus(RetailOps_Api_Helper_Data::RETAILOPS_ORDER_HOLD);
+        $order->setRetailopsStatus(RetailOps_Api_Helper_Data::RETAILOPS_ORDER_READY);
     }
 
     /**
@@ -41,6 +41,7 @@ class RetailOps_Api_Model_Observer
      */
     public function downloadProductImages()
     {
+        return;
         $mediaAdapter = new RetailOps_Api_Model_Catalog_Adapter_Media();
         $mediaAdapter->downloadProductImages();
     }
