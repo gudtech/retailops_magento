@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+/**
+ * Dolls Kill store credit for guest module.
+ * 
+ * PHP Version 5
+ * 
+ * @category  Configuration
+ * @package   Groove_GuestStoreCredit
+ * @author    Groove Commerce
+ * @copyright 2016 Groove Commerce, LLC. All Rights Reserved.
+ */
+
+-->
+<config>
+    <modules>
+        <Groove_GuestStoreCredit>
+            <version>0.0.1</version>
+        </Groove_GuestStoreCredit>
+    </modules>
+    <default>
+        <customer>
+            <create_account>
+                <from_store_credit_template>customer_create_account_from_store_credit_template</from_store_credit_template>
+                <from_store_credit_customer_template>customer_create_account_from_store_credit_customer_template</from_store_credit_customer_template>
+            </create_account>
+            <enterprise_customerbalance>
+                <guest_conversion>1</guest_conversion>
+            </enterprise_customerbalance>
+        </customer>
+        <giftcard>
+            <giftcardaccount_general>
+                <storecredit_conversion>1</storecredit_conversion>
+            </giftcardaccount_general>
+        </giftcard>
+    </default>
+    <global>
+        <helpers>
+            <gueststorecredit>
+                <class>Groove_GuestStoreCredit_Helper</class>
+            </gueststorecredit>
+        </helpers>
+        <blocks>
+            <enterprise_customerbalance>
+                <rewrite>
+                    <adminhtml_sales_order_creditmemo_controls>Groove_GuestStoreCredit_Block_Adminhtml_CustomerBalance_Sales_Order_Creditmemo_Controls</adminhtml_sales_order_creditmemo_controls>
+                </rewrite>
+            </enterprise_customerbalance>
+            <enterprise_giftcardaccount>
+                <rewrite>
+                    <adminhtml_sales_order_creditmemo_controls>Groove_GuestStoreCredit_Block_Adminhtml_GiftCardAccount_Sales_Order_Creditmemo_Controls</adminhtml_sales_order_creditmemo_controls>
+                </rewrite>
+            </enterprise_giftcardaccount>
+        </blocks>
+        <models>
+            <customer>
+                <rewrite>
+                    <customer>Groove_GuestStoreCredit_Model_Customer</customer>
+                </rewrite>
+            </customer>
+            <enterprise_customerbalance>
+                <rewrite>
+                    <balance>Groove_GuestStoreCredit_Model_CustomerBalance_Balance</balance>
+                </rewrite>
+            </enterprise_customerbalance>
+            <enterprise_giftcardaccount>
+                <rewrite>
+                    <observer>Groove_GuestStoreCredit_Model_GiftCardAccount_Observer</observer>
+                </rewrite>
+            </enterprise_giftcardaccount>
+        </models>
+        <template>
+            <email>
+                <customer_create_account_from_store_credit_template translate="label" module="gueststorecredit">
+                    <label><![CDATA[New Account from Store Credit]]></label>
+                    <file>account_new_from_store_credit.html</file>
+                    <type>html</type>
+                </customer_create_account_from_store_credit_template>
+            </email>
+        </template>
+        <fieldsets>
+            <sales_convert_order_address>
+                <prefix>
+                    <to_customer_address>*</to_customer_address>
+                </prefix>
+                <firstname>
+                    <to_customer_address>*</to_customer_address>
+                </firstname>
+                <middlename>
+                    <to_customer_address>*</to_customer_address>
+                </middlename>
+                <lastname>
+                    <to_customer_address>*</to_customer_address>
+                </lastname>
+                <suffix>
+                    <to_customer_address>*</to_customer_address>
+                </suffix>
+                <company>
+                    <to_customer_address>*</to_customer_address>
+                </company>
+                <street_full>
+                    <to_customer_address>street</to_customer_address>
+                </street_full>
+                <street>
+                    <to_customer_address>*</to_customer_address>
+                </street>
+                <city>
+                    <to_customer_address>*</to_customer_address>
+                </city>
+                <region>
+                    <to_customer_address>*</to_customer_address>
+                </region>
+                <region_id>
+                    <to_customer_address>*</to_customer_address>
+                </region_id>
+                <postcode>
+                    <to_customer_address>*</to_customer_address>
+                </postcode>
+                <country_id>
+                    <to_customer_address>*</to_customer_address>
+                </country_id>
+                <telephone>
+                    <to_customer_address>*</to_customer_address>
+                </telephone>
+                <fax>
+                    <to_customer_address>*</to_customer_address>
+                </fax>
+            </sales_convert_order_address>
+        </fieldsets>
+    </global>
+    <adminhtml>
+        <layout>
+            <updates>
+                <gueststorecredit>
+                    <file>gueststorecredit.xml</file>
+                </gueststorecredit>
+            </updates>
+        </layout>
+    </adminhtml>
+</config>
