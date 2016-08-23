@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+/**
+ * Dolls Kill store credit for guest module.
+ * 
+ * PHP Version 5
+ * 
+ * @category  Configuration
+ * @package   Groove_GuestStoreCredit
+ * @author    Groove Commerce
+ * @copyright 2016 Groove Commerce, LLC. All Rights Reserved.
+ */
+
+-->
+<config>
+    <modules>
+        <Groove_GuestStoreCredit>
+            <active>true</active>
+            <codePool>local</codePool>
+            <depends>
+                <Enterprise_GiftCardAccount />
+                <Enterprise_CustomerBalance />
+                <DollsKill_Customer />
+            </depends>
+        </Groove_GuestStoreCredit>
+    </modules>
+</config>

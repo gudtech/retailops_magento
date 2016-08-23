@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+/**
+ * Dolls Kill ERP (RetailOps) integration module.
+ * 
+ * PHP Version 5
+ * 
+ * @category  Configuration
+ * @package   Groove_DollOps
+ * @author    Groove Commerce
+ * @copyright 2015 Groove Commerce, LLC. All Rights Reserved.
+ */
+
+-->
+<config>
+    <modules>
+        <Groove_DollOps>
+            <active>true</active>
+            <codePool>community</codePool>
+            <depends>
+                <RetailOps_Api />
+                <Groove_GuestStoreCredit />
+            </depends>
+        </Groove_DollOps>
+    </modules>
+</config>
