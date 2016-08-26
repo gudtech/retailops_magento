@@ -76,15 +76,17 @@ class RetailOps_Api_Model_Catalog_Adapter_Category extends RetailOps_Api_Model_C
                                     array('category_id' => $categoryId, 'category_data' => $data));
 
                             } else {
-                                $categoryId = $this->_categories[$index];
+                                if ($categoryData['update_if_exists']) {
+                                    $categoryId = $this->_categories[$index];
 
-                                Mage::dispatchEvent('retailops_catalog_category_update_before',
-                                    array('category_id' => $categoryId, 'category_data' => $data));
+                                    Mage::dispatchEvent('retailops_catalog_category_update_before',
+                                                        array('category_id' => $categoryId, 'category_data' => $data));
 
-                                $categoryApi->update($categoryId, $data->getData());
+                                    $categoryApi->update($categoryId, $data->getData());
 
-                                Mage::dispatchEvent('retailops_catalog_category_update_after',
-                                    array('category_id' => $categoryId, 'category_data' => $data));
+                                    Mage::dispatchEvent('retailops_catalog_category_update_after',
+                                                        array('category_id' => $categoryId, 'category_data' => $data));
+                                }
                             }
                             $this->_wereProcessed[] = $index;
                         }

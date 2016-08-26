@@ -318,7 +318,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
                     $attributeId = $this->findAttribute($attributeData['attribute_code']);
                     if (!in_array($attributeData['attribute_code'], $this->_wereProcessed)) {
                         if ($attributeId !== false) {
-                            if (!$attributeData['no_update_if_exists']) {
+                            if ($attributeData['update_if_exists']) {
                                 Mage::dispatchEvent('retailops_catalog_attribute_update_before',
                                     array('attribute_data' => $attribute));
                                 $attributeApi->update($attributeData['attribute_code'], $attribute->getData());
