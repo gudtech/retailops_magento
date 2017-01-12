@@ -305,6 +305,11 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                     foreach ($items as $item) {
                         $qtyToShip = $item->getQtyToShip();
                         $qtyToInvoice = $item->getQtyToInvoice();
+
+                        if ($item->getIsVirtual()) {
+                            $qtyToShip = 0;
+                        }
+
                         if ($qtyToShip + $qtyToInvoice > 0) {
                            if ($qtyToShip < $qtyToInvoice) {
                                 /**
