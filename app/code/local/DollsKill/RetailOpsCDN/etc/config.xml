@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <modules>
+        <DollsKill_RetailOpsCDN>
+            <version>1.0.0</version>
+        </DollsKill_RetailOpsCDN>
+    </modules>
+    <global>
+        <helpers>
+            <dollskill_cdn>
+                <class>DollsKill_RetailOpsCDN_Helper</class>
+            </dollskill_cdn>
+            <catalog>
+                <rewrite>
+                    <image>DollsKill_RetailOpsCDN_Helper_Catalog_Image</image>
+                </rewrite>
+            </catalog>
+        </helpers>
+    </global>
+    <frontend>
+        <routers>
+            <retailops_cdn>
+                <args>
+                    <modules>
+                        <DollsKill_RetailOpsCDN before="Groove_RetailOpsCDN">DollsKill_RetailOpsCDN</DollsKill_RetailOpsCDN>
+                    </modules>
+                </args>
+            </retailops_cdn>
+        </routers>
+    </frontend>
+</config>

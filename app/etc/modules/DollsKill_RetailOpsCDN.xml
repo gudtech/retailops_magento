@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <modules>
+        <DollsKill_RetailOpsCDN>
+            <active>true</active>
+            <codePool>local</codePool>
+            <depends>
+                <RetailOps_Api />
+                <Groove_RetailOpsCDN />
+            </depends>
+        </DollsKill_RetailOpsCDN>
+    </modules>
+</config>

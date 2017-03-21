@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+/**
+ * Dolls Kill store credit for guest module.
+ * 
+ * PHP Version 5
+ * 
+ * @category  Configuration
+ * @package   Groove_GuestStoreCredit
+ * @author    Groove Commerce
+ * @copyright 2016 Groove Commerce, LLC. All Rights Reserved.
+ */
+
+-->
+<config>
+    <sections>
+        <customer>
+            <groups>
+                <create_account>
+                    <fields>
+                        <from_store_credit_template translate="label" module="gueststorecredit">
+                            <label><![CDATA[From Store Credit Email]]></label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_email_template</source_model>
+                            <sort_order>115</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </from_store_credit_template>
+                         <from_store_credit_customer_template translate="label" module="gueststorecredit">
+                            <label><![CDATA[From Store Credit Email For Customers]]></label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_email_template</source_model>
+                            <sort_order>116</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </from_store_credit_customer_template>
+                    </fields>
+                </create_account>
+                <enterprise_customerbalance>
+                    <fields>
+                        <guest_conversion translate="label" module="gueststorecredit">
+                            <label><![CDATA[Convert Guests for Store Credit]]></label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>7</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </guest_conversion>
+                    </fields>
+                </enterprise_customerbalance>
+            </groups>
+        </customer>
+        <giftcard>
+            <groups>
+                <giftcardaccount_general>
+                    <fields>
+                        <storecredit_conversion translate="label" module="gueststorecredit">
+                            <label><![CDATA[Convert Gift Card Refunds to Store Credit]]></label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>45</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </storecredit_conversion>
+                    </fields>
+                </giftcardaccount_general>
+            </groups>
+        </giftcard>
+    </sections>
+</config>

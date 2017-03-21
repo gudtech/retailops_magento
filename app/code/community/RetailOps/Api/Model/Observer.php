@@ -41,6 +41,7 @@ class RetailOps_Api_Model_Observer
      */
     public function downloadProductImages()
     {
+        return;
         $mediaAdapter = new RetailOps_Api_Model_Catalog_Adapter_Media();
         $mediaAdapter->downloadProductImages();
     }
