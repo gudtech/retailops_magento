@@ -229,20 +229,31 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
 
                             $invoice = new Varien_Object($invoiceInfo);
                             $invoice->setData('items_to_invoice', $itemsToInvoice);
-
-                            Mage::dispatchEvent(
-                                'retailops_shipment_invoice_before',
-                                array('record' => $invoice)
+                            $invoiceData = array(
+                                'order' => $order,
+                                'record' => $invoice,
+                                'items_to_invoice' => array(
+                                    'qtys' => $itemsToInvoice,
+                                    'shipping_amount' => $this->_fractionalBaseShipping($order, $itemsToInvoice, $isFullyShipped),
+                                ),
                             );
 
+                            Mage::dispatchEvent('retailops_shipment_invoice_before', $invoiceData);
+
                             $invoiceResult = $this->_createInvoiceAndCapture(
-                                    $order,
-                                    $invoice->getItemsToInvoice(),
-                                    $invoice->getCapturedOffline(),
-                                    $invoice->getComment(),
-                                    $invoice->getEmail(),
-                                    $invoice->getIncludeComment()
-                                );
+                                $order,
+                                $invoiceData['items_to_invoice'],
+                                $invoice->getCapturedOffline(),
+                                $invoice->getComment(),
+                                $invoice->getEmail(),
+                                $invoice->getIncludeComment()
+                            );
+
+                            Mage::dispatchEvent('retailops_shipment_invoice_after', array(
+                                'order' => $order,
+                                'invoice' => $invoice,
+                                'result' => $invoiceResult,
+                            ));
 
                             $invoiceResult = array($invoiceResult);
                         }
