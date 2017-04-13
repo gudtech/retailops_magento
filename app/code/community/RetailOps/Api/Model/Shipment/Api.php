@@ -387,18 +387,40 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
      * @param bool $includeComment
      * @return string
      */
-    protected function _createInvoiceAndCapture($order, $itemsQty, $capturedOffline = false, $comment = null, $email = false, $includeComment = false)
+    protected function _createInvoiceAndCapture($order, $invoiceData, $capturedOffline = false, $comment = null, $email = false, $includeComment = false)
     {
         /** @var $helper RetailOps_Api_Helper_Data */
         $helper = Mage::helper('retailops_api');
         try {
             $itemsQtyFomratted = array();
-            if ($itemsQty) {
+            if ($invoiceData && $invoiceData['qtys']) {
                 foreach ($order->getAllItems() as $item) {
-                    $itemsQtyFomratted[$item->getId()] = isset($itemsQty[$item->getId()]) ? $itemsQty[$item->getId()] : 0;
+                    $itemsQtyFomratted[$item->getId()]
+                        = isset($invoiceData['qtys'][$item->getId()]) ? $invoiceData['qtys'][$item->getId()] : 0;
                 }
             }
             $invoice = $order->prepareInvoice($itemsQtyFomratted);
+
+            if (isset($invoiceData['shipping_amount'])) {
+                $originalInvoiceShippingAmount = $invoice->getShippingAmount();
+                $originalInvoiceBaseShippingAmount = $invoice->getBaseShippingAmount();
+
+                $shippingPercent = $invoiceData['shipping_amount'] / $order->getBaseShippingAmount();
+
+                $newInvoiceShippingAmount = $order->getShippingAmount() * $shippingPercent;
+                $newInvoiceBaseShippingAmount = $invoiceData['shipping_amount'];
+
+                $invoice->setShippingAmount(Mage::app()->getStore()->roundPrice($newInvoiceShippingAmount));
+                $invoice->setBaseShippingAmount(Mage::app()->getStore()->roundPrice($newInvoiceBaseShippingAmount));
+                $invoice->setShippingInclTax(Mage::app()->getStore()->roundPrice($order->getShippingInclTax() * $shippingPercent));
+                $invoice->setBaseShippingInclTax(Mage::app()->getStore()->roundPrice($order->getBaseShippingInclTax() * $shippingPercent));
+
+                $invoice->setGrandTotal(Mage::app()->getStore()->roundPrice(
+                    $invoice->getGrandTotal() - ($originalInvoiceShippingAmount - $newInvoiceShippingAmount)));
+                $invoice->setBaseGrandTotal(Mage::app()->getStore()->roundPrice(
+                    $invoice->getBaseGrandTotal() - ($originalInvoiceBaseShippingAmount - $newInvoiceBaseShippingAmount)));
+            }
+
             $invoice->setRequestedCaptureCase($capturedOffline
                 ? Mage_Sales_Model_Order_Invoice::CAPTURE_OFFLINE : Mage_Sales_Model_Order_Invoice::CAPTURE_ONLINE);
             $invoice->register();
