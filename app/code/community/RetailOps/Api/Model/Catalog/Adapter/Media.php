@@ -125,7 +125,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
         $ioAdapter->checkAndCreateFolder($tmpDirectory);
         $ioAdapter->open(array('path' => $tmpDirectory));
         $remoteCopyRetryLimit = 3;
-        $errorLogPath = '/tmp/retailops_magento_image_error.log';
+        $errorLog = 'retailops_magento_image_error.log';
         if (!$item) {
             $items = Mage::getModel('retailops_api/catalog_media_item')->getCollection();
             $limit = $this->getHelper()->getConfig('media_processing_products_limit');
@@ -183,7 +183,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
                             // Possible if multiple scripts have kicked off cron jobs.
                             $recheck_file = $this->_existingImage($productId, $newImage);
                             if ($recheck_file) {
-                                file_put_contents($errorLogPath, "$sku: Image added to product before download completed\n", FILE_APPEND);
+                                Mage::log("$sku: Image added to product before download completed\n", Zend_Log::WARN, $errorLog);
                                 $file = $recheck_file;
                             }
                             else {
@@ -212,7 +212,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
                     } catch (Exception $e) {
                         $message = sprintf("Could not process image %s, error message: %s", $newImage['download_url'], $e->getMessage());
                         $imageResult[] = $message;
-                        file_put_contents($errorLogPath, "$message\n", FILE_APPEND);
+                        Mage::log($message, Zend_Log::ERR, $errorLog);
                     }
                 }
                 if ($imageResult) {
@@ -223,7 +223,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
                 }
             } catch (Exception $e) {
                 $result[$sku]['general'] = $e->getMessage();
-                file_put_contents($errorLogPath, "{$e->getMessage()}\n", FILE_APPEND);
+                Mage::log($e->getMessage(), Zend_Log::ERR, $errorLog);
             }
         }
 
@@ -349,7 +349,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
                 return $existingImage['value'];
             }
         }
-        
+
         foreach ($existingImages as $existingImage) {
             $fileNameMatch = preg_quote($newImageData['filename_match'], '~');
 
@@ -357,7 +357,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Media extends RetailOps_Api_Model_Cata
                 return $existingImage['value'];
             }
         }
-        
+
         return false;
     }
 
