@@ -304,10 +304,6 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                     if (!$order->getId()) {
                         throw new Exception('Order is not found');
                     }
-                    Mage::dispatchEvent(
-                        'retailops_order_close_before',
-                        array('order' => $order)
-                    );
                     $items = $order->getAllItems();
                     $itemsToReturn = array();
                     $itemsToCapture = array();
@@ -334,11 +330,27 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                            }
                         }
                     }
-                    if ($itemsToCapture) {
-                        $result['invoice_result'] = $this->_createInvoiceAndCapture($order, $itemsToCapture, $orderData['captured_offline']);
+                    $closeData = array(
+                        'order' => $order,
+                        'items_to_capture' => array(
+                            'qtys' => $itemsToCapture,
+                            'shipping_amount' => $this->_fractionalBaseShipping($order, $itemsToCapture),
+                        ),
+                        'items_to_return' => array(
+                            'qtys' => $itemsToReturn,
+                            'shipping_amount' => $this->_fractionalBaseShipping($order, $itemsToReturn),
+                        ),
+                    );
+
+                    Mage::dispatchEvent('retailops_order_close_before', $closeData);
+
+                    if (count($closeData['items_to_capture']['qtys'])) {
+                        $result['invoice_result'] = $this->_createInvoiceAndCapture(
+                            $order, $closeData['items_to_capture'], $orderData['captured_offline']);
                     }
-                    if ($itemsToReturn) {
-                        $result['creditmemo_result'] = $this->_getCreditMemoApi()->create($order, array('qtys' => $itemsToReturn), $orderData['captured_offline']);
+                    if (count($closeData['items_to_return']['qtys'])) {
+                        $result['creditmemo_result'] = $this->_getCreditMemoApi()->create(
+                            $order, $closeData['items_to_return'], $orderData['captured_offline']);
                     }
                     /**
                      * Cancel the rest items if any
@@ -349,6 +361,14 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                     }
                     $order->save();
                     $result['status'] = RetailOps_Api_Helper_Data::API_STATUS_SUCCESS;
+
+                    Mage::dispatchEvent(
+                        'retailops_order_close_after',
+                        array(
+                            'order' => $order,
+                            'result' => $result,
+                        )
+                    );
                 }
             } catch (Exception $e) {
                 $result['status'] = RetailOps_Api_Helper_Data::API_STATUS_FAIL;
