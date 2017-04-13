@@ -299,7 +299,6 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
                     );
                     $items = $order->getAllItems();
                     $itemsToReturn = array();
-                    $itemsToCancel = array();
                     $itemsToCapture = array();
                     /** @var $item Mage_Sales_Model_Order_Item  */
                     foreach ($items as $item) {
