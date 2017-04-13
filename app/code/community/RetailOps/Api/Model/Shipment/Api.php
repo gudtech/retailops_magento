@@ -360,6 +360,25 @@ class RetailOps_Api_Model_Shipment_Api extends Mage_Sales_Model_Order_Shipment_A
         return Mage::getModel('retailops_api/return_api');
     }
 
+    protected function _fractionalBaseShipping($order, $qtys = array(), $fullyShipped = false)
+    {
+        if (!count($qtys) && $fullyShipped) {
+            return $order->getBaseShippingAmount();
+        }
+
+        $itemsTotal = 0;
+        $qtysTotal = 0;
+        $items = $order->getAllItems();
+        foreach ($items as $item) {
+            $itemsTotal += $item->getBaseRowTotal();
+            if (isset($qtys[$item->getId()])) {
+                $qtysTotal += $item->getBaseRowTotal() * ($qtys[$item->getId()] / $item->getQtyOrdered());
+            }
+        }
+
+        return $order->getBaseShippingAmount() * ($qtysTotal / $itemsTotal);
+    }
+
     /**
      * @param Mage_Sales_Model_Order $order
      * @param array $itemsQty
