@@ -73,7 +73,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
     {
         $this->_prepareAttributeSet($data);
         $this->_prepareAttributes($data);
-        $this->_processAttributes($data, true);
+        $this->_processAttributes($data, null,true);
 
         return $this;
     }
@@ -97,7 +97,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
     {
         $productData['attribute_set_id'] = $this->_getAttributeSetIdByName($productData['attribute_set']);
         $this->_processStaticAttributes($productData);
-        $this->_processAttributes($productData);
+        $this->_processAttributes($productData, $product);
         if ($product->getId() &&
             (!isset($productData['unset_other_attribute']) || $productData['unset_other_attribute'])) {
             $this->_unsetOldData($productData, $product);
@@ -387,9 +387,10 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
 
     /**
      * @param $productData
+     * @param $product
      * @param bool $collectOptions
      */
-    protected function _processAttributes(&$productData, $collectOptions = false)
+    protected function _processAttributes(&$productData, &$product, $collectOptions = false)
     {
         if (isset($productData['attributes'])) {
             foreach ($productData['attributes'] as $attributeData) {
@@ -407,10 +408,11 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
                                 $this->_attributeOptionCache[$code][$value] = true;
                             }
                         }
-                    } else {
+                    } elseif($product) {
                         /**
                          * Collect attribute values
                          */
+                        $store_id = $attributeData['store_id'] || $product->getStoreId;
                         $valuesIds = array();
                         foreach ($values as $value) {
                             if (isset($this->_attributeOptionCache[$code][$value])) {
@@ -420,7 +422,11 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
                         if (count($valuesIds) == 1) {
                             $valuesIds = current($valuesIds);
                         }
-                        $productData[$code] = $valuesIds;
+                        if ($store_id == $product->getStoreId) {
+                            $productData[$code] = $valuesIds;
+                        }else{
+                            $product->addAttributeUpdate($code, $valuesIds, $store_id);
+                        }
                     }
                 } elseif (isset($attributeData['value'])) {
                     $productData[$code] = $attributeData['value'];
