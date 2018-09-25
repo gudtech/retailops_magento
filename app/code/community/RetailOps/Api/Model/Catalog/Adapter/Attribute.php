@@ -390,7 +390,7 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
      * @param $product
      * @param bool $collectOptions
      */
-    protected function _processAttributes(&$productData, &$product, $collectOptions = false)
+    protected function _processAttributes(&$productData, $product, $collectOptions = false)
     {
         if (isset($productData['attributes'])) {
             foreach ($productData['attributes'] as $attributeData) {
