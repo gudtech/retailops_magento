@@ -424,10 +424,34 @@ class RetailOps_Api_Model_Catalog_Adapter_Attribute extends RetailOps_Api_Model_
                         $attributeValue = $valuesIds;
                     }
                 } elseif (isset($attributeData['value'])) {
-                    $productData[$code] = $attributeData['value'];
+                    $attributeValue = $attributeData['value'];
+                }
+
+                if (isset($attributeValue)) {
+                    if (isset($attributeData['store_id'])) {
+                        $this->_setStoreAttributeValue($productData, $code, $attributeValue, $attributeData['store_id']);
+                    } else {
+                        $productData[$code] = $attributeValue;
+                    }
                 }
             }
         }
+    }
+
+    /**
+     * @param $productData
+     * @param $code attribute code
+     * @param $value attribute value
+     * @param $store_id store id
+     */
+    protected function _setStoreAttributeValue (&$productData, $code, $value, $store_id) {
+        if (!isset($productData['store_attribute_values'])) {
+            $productData['store_attribute_values'] = array();
+        }
+        if (!isset($productData['store_attribute_values'][$store_id])) {
+            $productData['store_attribute_values'][$store_id] = array();
+        }
+        $productData['store_attribute_values'][$store_id][$code] = $value;
     }
 
     /**
