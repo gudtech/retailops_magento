@@ -29,6 +29,8 @@ class RetailOps_Api_Model_Catalog_Adapter_Default extends RetailOps_Api_Model_Ca
 
     /** @var array */
     protected $_productTypes;
+    /** @var array */
+    protected $_storeAttributeValues = array();
 
     protected function _construct()
     {
@@ -93,6 +95,16 @@ class RetailOps_Api_Model_Catalog_Adapter_Default extends RetailOps_Api_Model_Ca
 
         $productData['product_id'] = $product->getId();
 
+        try {
+            foreach($this->_storeAttributeValues as $store_id => $attributeValues) {
+                foreach($attributeValues as $code => $value) {
+                    $product->addAttributeUpdate($code, $value, $store_id);
+                }
+            }
+        } catch (Mage_Core_Exception $e) {
+            $this->_throwException($e->getMessage(), 'error_saving_store_attributes');
+        }
+
         return $product->getId();
     }
 
@@ -127,6 +139,11 @@ class RetailOps_Api_Model_Catalog_Adapter_Default extends RetailOps_Api_Model_Ca
      */
     protected function _prepareDataForSave($product, $productData)
     {
+        if (isset($productData['store_attribute_values'])) {
+            $this->_storeAttributeValues = $productData['store_attribute_values'];
+            unset($productData['store_attribute_values']);
+        }
+
         $product->addData($productData);
 
         if (isset($productData['website_ids']) && is_array($productData['website_ids'])) {
