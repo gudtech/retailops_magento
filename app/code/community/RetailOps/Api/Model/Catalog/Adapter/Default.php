@@ -98,7 +98,8 @@ class RetailOps_Api_Model_Catalog_Adapter_Default extends RetailOps_Api_Model_Ca
         try {
             foreach($this->_storeAttributeValues as $store_id => $attributeValues) {
                 foreach($attributeValues as $code => $value) {
-                    $product->addAttributeUpdate($code, $value, $store_id);
+                    $product->addAttributeUpdate(
+                        $code, is_array($value) ? implode(",", $value) : $value, $store_id);
                 }
             }
         } catch (Mage_Core_Exception $e) {
