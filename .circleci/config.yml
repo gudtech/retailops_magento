@@ -1,0 +1,18 @@
+version: 2
+
+jobs:
+  build:
+    docker:
+      - image: circleci/php:7.3.6
+    steps:
+      - checkout
+      - run:
+          name: "Install Dependencies"
+          command: |
+            wget -O phpunit https://phar.phpunit.de/phpunit-8.phar
+            chmod +x phpunit
+            # TODO: Actually install Magento.
+      - run:
+          name: "Run Test Suite"
+          command: |
+            ./phpunit -c phpunit.xml
